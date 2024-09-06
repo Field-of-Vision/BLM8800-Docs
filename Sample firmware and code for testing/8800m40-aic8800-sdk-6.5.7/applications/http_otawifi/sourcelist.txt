@@ -1,0 +1,2 @@
+# SNTP client files
+    src/fhost_http_ota.c

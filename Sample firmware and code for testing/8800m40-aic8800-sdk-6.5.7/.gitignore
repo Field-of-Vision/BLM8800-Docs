@@ -1,0 +1,19 @@
+*.py[cod]
+.sconsign.dblite
+
+# Default Build Directory
+build/
+
+# Eclipse Project Files
+.cproject
+.project
+.pydevproject
+
+# Vim Swap Files
+*.swp
+*~
+
+# Misc
+*.bak
+*.cvsignore
+/[Ss][Ii]/

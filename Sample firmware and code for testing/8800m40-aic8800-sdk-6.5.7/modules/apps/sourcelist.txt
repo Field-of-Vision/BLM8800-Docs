@@ -1,0 +1,30 @@
+#app_bt application
+#if (env['BLE_ONLY'] == 'off')
+    bt/app_a2dp.c
+    bt/app_a2dp_source.c
+    bt/app_avrcp.c
+    bt/app_bt.c
+    bt/app_bt_queue.c
+    bt/app_hfp.c
+    bt/app_hfg.c
+    bt/app_hid.c
+    bt/app_hsp.c
+    bt/app_spp.c
+    bt/app_test.c
+    bt/app_tws.c
+    bt/app_console.c
+#if (env['BT_OTA'] == 'on')
+    bt/app_ota_box.c
+#endif #(env['BT_OTA'] == 'on')
+#endif #(env['BLE_ONLY'] == 'off')
+
+
+#if (env['BLE_ONLY'] == 'on' or env['BTDM'] == 'on')
+    ble/app_ble_only.c
+    ble/app_ble_queue.c
+    ble/app_ble_console.c
+    ble/app_ble_audtransmit.c
+#if (env['BLE_WAKEUP'] == 'on')
+    ble/app_ble_wakeup.c
+#endif #(env['BLE_WAKEUP'] == 'on')
+#endif #(env['BLE_ONLY'] == 'on' or env['BTDM'] == 'on')

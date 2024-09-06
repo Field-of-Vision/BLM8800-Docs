@@ -1,0 +1,89 @@
+# Set the default autocrlf behavior
+*                   text=auto
+
+# Declare text files
+*.c                 text eol=lf
+*.cpp               text eol=lf
+*.h                 text eol=lf
+*.s                 text eol=lf
+*.S                 text eol=lf
+*.sct               text eol=lf
+*.ld                text eol=lf
+*.txt               text eol=lf
+*.xml               text eol=lf
+*.py                text eol=lf
+*.md                text eol=lf
+*.json              text eol=lf
+*.tmpl              text eol=lf
+*.html              text eol=lf
+*.gdbinit-jtag      text eol=lf
+*.dox               text eol=lf
+*.readme            text eol=lf
+*.bat               text eol=lf
+*.sh                text eol=lf
+*.Doxyfile          text eol=lf
+*.mk                text eol=lf
+*.mak               text eol=lf
+*.rules             text eol=lf
+*.config            text eol=lf
+*.conf              text eol=lf
+*.aidl              text eol=lf
+*.service.in        text eol=lf
+*.service.arg.in    text eol=lf
+*.sgml              text eol=lf
+*.svg               text eol=lf
+*.qrc               text eol=lf
+*.ts                text eol=lf
+*.ui                text eol=lf
+*.desktop           text eol=lf
+*.pro               text eol=lf
+*.tab               text eol=lf
+.gitattributes      text eol=lf
+.gitignore          text eol=lf
+.clang-format       text eol=lf
+Doxyfile            text eol=lf
+SAdditions          text eol=lf
+SCompile            text eol=lf
+CHANGELOG           text eol=lf
+ChangeLog           text eol=lf
+COPYING             text eol=lf
+FILES               text eol=lf
+README              text eol=lf
+UPGRADING           text eol=lf
+makefsdata          text eol=lf
+Kconfig             text eol=lf
+Makefile            text eol=lf
+PPPD_FOLLOWUP       text eol=lf
+CONTRIBUTIONS       text eol=lf
+defconfig           text eol=lf
+60_wpa_supplicant   text eol=lf
+wps-ap-cli          text eol=lf
+[Ss][Cc]ons*        text eol=lf
+README-*            text eol=lf
+README.*            text eol=lf
+LICENSE             text eol=lf
+
+*.vcproj            text eol=crlf
+*.vcxproj           text eol=crlf
+*.dsp               text eol=crlf
+*.dsw               text eol=crlf
+*.sln               text eol=crlf
+*.reg               text eol=crlf
+*.log               text eol=crlf
+*.csv               text eol=crlf
+
+# Declare binary files
+*.a       binary
+*.o       binary
+*.elf     binary
+*.bin     binary
+*.png     binary
+*.ico     binary
+*.gif     binary
+*.docx    binary
+*.xls     binary
+
+# Archive ignore
+gen_released_sdk.sh export-ignore
+docs/merge_new_sdk_steps.md export-ignore
+docs/Content.md export-ignore

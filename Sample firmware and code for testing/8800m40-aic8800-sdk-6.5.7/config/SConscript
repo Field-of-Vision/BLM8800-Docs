@@ -1,0 +1,1543 @@
+########################################################################################
+#
+# @file SConscript
+#
+# @brief Scons script for All build
+#
+# Copyright (C) RivieraWaves 2009-2015
+#
+#########################################################################################
+
+import sys
+import os
+import os.path
+
+import SCons.Util
+import scutils
+from os.path import join
+
+
+# initialize the environment from the command line arguments
+env = scutils.env_init()
+
+# Get platform & product
+plf        = env['PLF']
+product    = env['PRODUCT']
+hw_platform = env['HW_PLATFORM']
+rf_mode    = env['RF_MODE']
+bt_mode    = env['BT_MODE']
+dacl_mixer_mode = env['DACL_MIXER_MODE']
+dacr_mixer_mode = env['DACR_MIXER_MODE']
+buildtool = env['BUILDTOOL']
+
+#---------------------------------------------------------------
+# Basic Argument Check. Build Stop if provided param isn't good.
+#---------------------------------------------------------------
+arg_err = 0
+print '\n'
+if ((product not in ['basic', 'basic-rtos']) and
+    (product not in ['host-wifi', 'host-bt', 'host-wb', 'host-dwb'])):
+    arg_err = 1
+    print 'Unrecognized product: ' + product
+
+if (plf not in ['aic8800', 'aic8800mc', 'aic8800m40']):
+    arg_err = 1
+    print 'Unrecognized platform: ' + plf
+
+hw_platform_dict = {'pxp':'0', 'fpga':'1', 'asic':'2'}
+#if (not hw_platform_dict.has_key(hw_platform)):
+if (hw_platform not in hw_platform_dict.keys()):
+    arg_err = 1
+    print 'Unrecognized HW platform: ' + hw_platform
+
+rf_mode_dict = {'null':'0', 'bt_only':'1', 'bt_combo':'2', 'btwifi_combo':'3'}
+#if (not rf_mode_dict.has_key(rf_mode)):
+if (rf_mode not in rf_mode_dict.keys()):
+    arg_err = 1
+    print 'Unrecognized RF mode: ' + rf_mode
+
+bt_mode_dict = {'bt_only_sw':'0', 'bt_wifi_combo':'1', 'bt_only':'2', 'bt_only_test':'3', 'bt_wifi_combo_test':'4', 'bt_only_coant':'5', 'null':'6'}
+#if (not bt_mode_dict.has_key(bt_mode)):
+if (bt_mode not in bt_mode_dict.keys()):
+    arg_err = 1
+    print 'Unrecognized BT mode: ' + bt_mode
+
+dac_mixer_mode_dict = {'left':'0', 'mute':'1', 'right':'2', 'lprd2':'3', 'lmrd2':'4'}
+if (dacl_mixer_mode not in dac_mixer_mode_dict.keys()):
+    arg_err = 1
+    print 'Unrecognized dacl_mixer_mode: ' + dacl_mixer_mode
+if (dacr_mixer_mode not in dac_mixer_mode_dict.keys()):
+    arg_err = 1
+    print 'Unrecognized dacr_mixer_mode: ' + dacr_mixer_mode
+
+if (arg_err):
+    # Stop the build process immediately
+    exec scutils.stop_build()
+
+# Get Target Mode
+tgtmode = env['TGT_MODE']
+assert(tgtmode in ('none', 'bt', 'tws', 'ble', 'test', 'wifi_audio', 'btdm', 'bt_wifi_audio', 'bt_usb', 'wifi', 'wifi_rawdata', 'wifi_fhostif', 'wifi_fhostif_ramopt','wifi_ble_smartconfig',
+                   'wifi_tls', 'wifi_sntp', 'wifi_http_ota', 'dev_wifi', 'm2d', 'dwb', 'ble_wifi', 'btdm_wifi', 'wifi_lowpower', 'wifi_wapi', 'wifi_csi', 'ble_wifi_fhostif', 'ble_wifi_fhostif_ramopt',
+                   '8800a_wifi_audio', 'ble_wifi_fhostif_hiram_ret'))
+
+
+# Get Test Case
+test = env['TEST']
+assert(test in ('none', 'dma', 'trans', 'spi0', 'spi_slave', 'ticker', 'gpio', 'gpio_irq', 'uart', 'ce', 'aes', 'fft512', 'fir', 'multadd', 'asio', 'sbc', 'aac', 'usbd_cdc', 'usbd_audio',
+                'memcpy', 'unalign', 'checksum', 'i2cm0', 'clksw', 'psram', 'ddr', 'flash', 'staticlib', 'sdmmc', 'sdcard', 'sdcard_audio', 'pwm',
+                'sleep', 'trng', 'psim', 'wdt', 'msadc', 'gpadc', 'procmon', 'gsensor', 'screen', 'epaper', 'usb_host', 'usbh_video', 'mp3', 'lc3', 'hci', 'dsp', 'upgrade',
+                'misc', 'spi_lcd_4wires', 'audio_mt', 'usb_bt', 'bootloader', 'usbd_msc', 'microhost', 'gpiob_spi', 'gpiob_i2cm', 'press_button', 'cjson', 'xmodem', 'minilzo'))
+
+# Get Application
+application = env['FHOST_APP'] if product in ('host-wifi', 'host-wb', 'host-dwb') else 'none'
+assert(application in ('none', 'console', 'uartwifi', 'example', 'tls_example', 'rtp', 'http_serv', 'web_cfg', 'wh', 'sntp_client', 'interphone', 'blesmartconfig', 'hostif', 'fhostif', 'http_ota', 'mic', 'rawdata', 'csi'))
+if application != 'none':
+    if application == 'console':
+        env['CONSOLE'] = 'on'
+        env['ATCMD'] = 'off'
+    if application == 'uartwifi':
+        env['CONSOLE'] = 'off'
+        env['ATCMD'] = 'on'
+    if not application.endswith('wifi'):
+        application += 'wifi'
+
+# Get RTOS
+rtos = env['RTOS']
+assert(rtos in ('none', 'freertos'))
+assert(product not in ('basic-rtos', 'host-wifi', 'host-bt', 'host-wb', 'host-dwb') or rtos != 'none')
+
+# Get BT STACK
+bt_stack = env['BT_STACK']
+assert(bt_stack in ('none', 'btdm'))
+assert(product not in ('host-bt', 'host-wb', 'host-dwb') or bt_stack != 'none')
+if env['BT_BLE'] == 'on':
+    BLE_EMB_PRESENT   = (env['BT_BLE'] == 'on')
+    BLE_HOST_PRESENT  = (env['BT_BLE'] == 'on')
+    BLE_APP_PRESENT   = (env['BT_BLE'] == 'on')
+
+# Get Wi-Fi STACK
+wifi_stack = env['WIFI_STACK']
+assert(wifi_stack in ('none', 'wifi'))
+assert(product not in ('host-wifi', 'host-wb', 'host-dwb') or wifi_stack != 'none')
+
+wifi_hostif = env['HOSTIF']
+assert(wifi_hostif in ('none', 'usb', 'sdio'))
+
+#Get Bt Audio
+if (test in ['sdcard_audio']):
+    env['BT_AUDIO'] = 'on'
+if env['BT_AUDIO'] == 'on':
+    bt_audio = 'bt_audio'
+else:
+    bt_audio = 'none'
+assert(bt_audio in ('none', 'bt_audio'))
+
+#Get Audio Stream Input Output
+if (test in ('asio', 'mp3')):
+    env['ASIO'] = 'on'
+if env['BT_AUDIO'] == 'on':
+    env['ASIO'] = 'on'
+if env['ASIO'] == 'on':
+    asio = 'asio'
+else:
+    asio = 'none'
+assert(asio in ('none', 'asio'))
+
+#Get Audio
+if env['BT_STACK'] != 'none':
+    if env['BLE_ONLY'] == 'off':
+        env['AUDIO'] = 'on'
+if env['BT_AUDIO'] == 'on':
+    env['AUDIO'] = 'on'
+if env['WIFI_AUDIO'] == 'on':
+    env['AUDIO'] = 'on'
+if env['ASIO'] == 'on':
+    env['AUDIO'] = 'on'
+if env['AUDIO'] == 'on':
+    audio = 'audio'
+else:
+    audio = 'none'
+assert(audio in ('none', 'audio'))
+
+#Get UTILS
+if (product in ['host-bt', 'host-wb', 'host-dwb']):
+    env['UTILS'] = 'on'
+if (test in ('xmodem')):
+    env['UTILS'] = 'on'
+if env['AUDIO'] == 'on':
+    env['UTILS'] = 'on'
+if env['UTILS'] == 'on':
+    utils = 'utils'
+else:
+    utils = 'none'
+assert(utils in ('none', 'utils'))
+
+#Get AAC
+if test == 'aac':
+    env['AAC'] = 'on'
+if env['AAC'] == 'on':
+    aac = 'aac'
+else:
+    aac = 'none'
+assert(aac in ('none', 'aac'))
+
+#Get MP3
+if test == 'mp3':
+    env['MP3'] = 'on'
+if env['MP3'] == 'on':
+    mp3 = 'mp3'
+else:
+    mp3 = 'none'
+assert(mp3 in ('none', 'mp3'))
+
+#Get LC3
+if test == 'lc3':
+    env['LC3'] = 'on'
+if env['LC3'] == 'on':
+    lc3 = 'lc3'
+else:
+    lc3 = 'none'
+assert(lc3 in ('none', 'lc3'))
+
+#Get LANG
+if env['LANG'] == 'en':
+    lang = 'en'
+elif env['LANG'] == 'cn':
+    lang = 'cn'
+else:
+    lang = 'en'
+assert(lang in ('en', 'cn'))
+
+#Get DSP
+if test == 'dsp':
+    env['DSP'] = 'on'
+if env['DSP'] == 'on':
+    dsp = 'dsp'
+else:
+    dsp = 'none'
+assert(dsp in ('none', 'dsp'))
+
+# Get Network Stack
+nets = env['NETS']
+assert(nets in ('none', 'lwip'))
+# assert(product not in ('host-wifi', 'host-wb') or nets != 'none')
+
+# Get crypto library
+crypto = env['CRYPTO']
+assert(crypto in ('none', 'mbedtls'))
+
+# Get build dir
+build_dir  = env['BUILD_DIR']
+
+# algo
+algo = env['ALGO']
+assert(algo in ('on', 'off'))
+
+# lzma
+lzma = env['LZMA']
+assert(lzma in ('on', 'off'))
+
+# boot_ago
+boot_ago = env['BOOT_AGO']
+assert(boot_ago in ('on', 'off'))
+
+# Hostif optimize
+hostif_opt = env['HOSTIF_OPT']
+assert(hostif_opt in ('on', 'off'))
+
+# User code
+user_code = env['USER_CODE']
+assert(user_code in ('none', 'src', 'lib'))
+
+# Default local settings
+base_dir          = scutils.ext_path('#/..')
+plf_dir           = os.path.join(scutils.ext_path('#/../plf'), plf)
+base_build_dir    = scutils.ext_path(build_dir)
+modules_dir       = scutils.ext_path('#/../modules')
+
+plf_src_dir       = os.path.join(plf_dir, 'src')
+plf_config_dir    = os.path.join(plf_dir, 'config')
+
+if tgtmode != 'none':
+    tgtmode_folder       = 'target_'+tgtmode
+    tgtmode_dir          = os.path.join(scutils.ext_path('#/'), plf, tgtmode_folder)
+    tgtmode_config_dir   = os.path.join(tgtmode_dir, 'config')
+    tgtmode_lib_dir      = os.path.join(tgtmode_dir, 'lib')
+
+if rtos != 'none':
+    rtos_dir          = os.path.join(scutils.ext_path('#/../'), rtos)
+    rtos_config_dir   = os.path.join(rtos_dir, 'config')
+
+if test != 'none':
+    test_folder       = 'tests'
+    test_dir          = os.path.join(scutils.ext_path('#/../'), test_folder)
+    test_config_dir   = os.path.join(test_dir, 'config')
+
+if application != 'none':
+    application_folder       = 'applications'
+    application_dir          = os.path.join(scutils.ext_path('#/../'), application_folder, application)
+    application_config_dir   = application_dir
+
+reg_build_dir     = os.path.join(plf_src_dir, 'build')
+
+if bt_stack != 'none':
+    bt_stack_dir      = os.path.join(scutils.ext_path('#/../'), bt_stack)
+    bt_stack_config_dir   = os.path.join(bt_stack_dir, 'config')
+    ble_prf_ip_dir    = scutils.ext_path('#/../btdm/ble/ble_profiles')
+
+if utils != 'none':
+    utils_dir      = os.path.join(scutils.ext_path('#/../'), utils)
+    utils_config_dir   = os.path.join(utils_dir, 'config')
+
+if audio != 'none':
+    audio_dir      = os.path.join(scutils.ext_path('#/../'), audio)
+    audio_config_dir   = os.path.join(audio_dir, 'config')
+
+# Wi-Fi stack paths
+if wifi_stack != 'none':
+    wifi_stack_dir          = os.path.join(scutils.ext_path('#/../'), wifi_stack)
+    wifi_stack_config_dir   = os.path.join(wifi_stack_dir, 'config')
+    if nets != 'none':
+        nets_dir     = os.path.join(scutils.ext_path('#/../'), nets)
+        wpa_dir      = os.path.join(scutils.ext_path('#/../wpa_supplicant'))
+        wapi_dir     = os.path.join(scutils.ext_path('#/../wapi_asue'))
+
+if crypto != 'none':
+    crypto_dir = os.path.join(scutils.ext_path('#/../'), crypto)
+
+if algo == 'on':
+    algo_dir = os.path.join(scutils.ext_path('#/../algo'))
+
+if product == 'host-wb':
+    coex_dir        = os.path.join(scutils.ext_path('#/../'), 'wb_coex')
+    coex_config_dir = os.path.join(coex_dir, 'config')
+
+if dsp != 'none':
+    dsp_dir      = os.path.join(scutils.ext_path('#/../'), dsp)
+    dsp_config_dir   = os.path.join(dsp_dir, 'config')
+
+if user_code != 'none':
+    user_folder = 'user'
+    user_dir = os.path.join(scutils.ext_path('#/../'), user_folder)
+
+#-----------------------------------------------------------
+# Build tool and default settings
+#-----------------------------------------------------------
+# execute SCompile Script
+exec scutils.load_script(os.path.join(plf_config_dir, 'SCompile'))
+
+ext_dir           = scutils.diff_path('#', '.')
+
+
+# Name of the build directory
+build_dir = os.path.join(base_build_dir, product + '-' + plf)
+obj_dir = os.path.join(build_dir, buildtool)
+
+# save directory in environment
+env['SRC_LIST'] = []
+env['PREPROC_SRC'] = []
+env['OBJ_DIR'] = obj_dir
+env['CPPDEFINES'] = []
+env['ASMDEFINES'] = []
+#-----------------------------------------------------------
+# Target specific settings
+#-----------------------------------------------------------
+
+# platform
+env['CPPDEFINES'] += ['CFG_' + plf.upper()]
+
+# HW platform, can be PXP/FPGA/ASIC
+env['CPPDEFINES'] += ['CFG_HW_PLATFORM=' + hw_platform_dict[hw_platform]]
+
+# RF mode, can be NULL/BT_ONLY/BT_COMBO/BTWIFI_COMBO
+env['CPPDEFINES'] += ['CFG_RF_MODE=' + rf_mode_dict[rf_mode]]
+
+# BT mode, can be (bt_only_sw, bt_wifi_combo, bt_only, bt_only_test, bt_wifi_combo_test, bt_only_coant, null)
+env['CPPDEFINES'] += ['CFG_BT_MODE=' + bt_mode_dict[bt_mode]]
+
+# dac mixer mode, can be left, mute, right, lprd2, lmrd2
+env['CPPDEFINES'] += ['CFG_DACL_MIXER_MODE=' + dac_mixer_mode_dict[dacl_mixer_mode]]
+env['CPPDEFINES'] += ['CFG_DACR_MIXER_MODE=' + dac_mixer_mode_dict[dacr_mixer_mode]]
+
+# rtos
+if rtos != 'none':
+    env['CPPDEFINES'] += ['CFG_RTOS']
+
+# tests
+if test != 'none':
+    env['CPPDEFINES'] += ['CFG_TEST']
+    env['CPPDEFINES'] += ['CFG_TEST_' + test.upper()]
+if test == 'aac':
+    assert(aac == 'aac');
+if test == 'asio':
+    assert(asio == 'asio');
+
+# application
+if application != 'none':
+    env['CPPDEFINES'] += ['CFG_APP_' + application.upper()]
+
+# Host-wb
+if product == 'host-wb':
+    env['CPPDEFINES'] += ['CFG_HOST_COMBO']
+
+# wifi_stack
+if wifi_stack != 'none':
+    env['CPPDEFINES'] += ['CFG_WIFI_STACK']
+    env['ASMDEFINES'] += ['CFG_WIFI_STACK']
+    if nets != 'none':
+        env['CPPDEFINES'] += ['CONFIG_RWNX_LWIP']
+    if wifi_hostif != 'none':
+        env['CPPDEFINES'] += ['CFG_HOSTIF', 'CONFIG_' + wifi_hostif.upper()]
+        if plf in ['aic8800mc'] and env['SDIO_FUNC2'] == 'on':
+            env['CPPDEFINES'] += ['CFG_SDIO_FUNC2']
+        if plf in ['aic8800m40'] and env['SDIO_RXMSG_Q'] == 'on':
+            env['CPPDEFINES'] += ['CFG_SDIO_RXMSG_Q']
+        if env['DEVICE_IPC'] == 'on':
+            env['CPPDEFINES'] += ['CFG_DEVICE_IPC']
+        if env['REMAIN_ON_MCU'] == 'on':
+            env['CPPDEFINES'] += ['CFG_REMAIN_ON_MCU']
+    env['TEMP_COMP'] = 'on'
+
+# crypto
+if crypto != 'none':
+    env['CPPDEFINES'] += ['CFG_CRYPTO']
+    env['CPPDEFINES'] += ['CONFIG_' + crypto.upper()]
+
+# algo
+if algo == 'on':
+    env['CPPDEFINES'] += ['CFG_LZMA']
+
+# lzma
+if lzma == 'on':
+    env['CPPDEFINES'] += ['CFG_LZMA_APP']
+
+# boot_ago
+if boot_ago == 'on':
+    env['CPPDEFINES'] += ['CFG_BOOT_AGO']
+
+# Hostif optimize
+if hostif_opt == 'on':
+    env['CPPDEFINES'] += ['CFG_HOSTIF_OPT']
+
+# 5g band
+if env['BAND5G'] == 'on':
+    env['CPPDEFINES'] += ['CFG_BAND5G']
+
+# P2P
+if env['P2P'] == 'on':
+    env['CPPDEFINES'] += ['CFG_P2P']
+    env['WPS'] = 'on'
+
+# WPS
+if env['WPS'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WPS']
+
+# Ping
+if env['PING'] == 'on':
+    env['CPPDEFINES'] += ['CFG_PING']
+
+# Iperf
+if env['IPERF'] == 'on':
+    env['CPPDEFINES'] += ['CFG_IPERF']
+
+# High speed iperf
+if env['HS_IPERF'] == 'on':
+    env['IPERF'] = 'on'
+    env['CPPDEFINES'] += ['CFG_HS_IPERF', 'CFG_IPERF']
+
+# Iperf tcp optimization
+if env['IPERF_TCP_OPT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_IPERF_TCP_OPT']
+
+# softAP
+if env['SOFTAP'] == 'on':
+    env['CPPDEFINES'] += ['CFG_SOFTAP']
+
+# Hostapd
+if env['HOSTAPD'] == 'on':
+    env['CPPDEFINES'] += ['CFG_HOSTAPD']
+    env['ASMDEFINES'] += ['CFG_HOSTAPD']
+
+# SNTP
+if env['SNTP'] == 'on':
+    env['CPPDEFINES'] += ['CFG_SNTP']
+
+# AIC HSU CHKSUM
+if env['CHKSUM'] == 'on':
+    env['CPPDEFINES'] += ['CFG_AIC_HSU_CHKSUM']
+
+# Data packet RSSI, mcu wifi only
+if wifi_stack != 'none' and nets != 'none' and env['RSSI_DATAPKT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_RSSI_DATAPKT']
+
+# WIFI ENGINEERING MODE
+if env['WIFI_ENGINEERING_MODE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WIFI_ENGINEERING_MODE']
+
+# WAPI
+if env['WAPI'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WAPI']
+
+# WIFI hibernate
+if env['WIFI_HIB'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WIFI_HIB']
+
+# WIFI CSI
+if env['CSI'] == 'on':
+    env['CPPDEFINES'] += ['CFG_CSI']
+
+# BWMODE
+if env['BWMODE'] == 'on' and plf in ['aic8800m40']:
+    env['CPPDEFINES'] += ['CFG_BWMODE']
+
+# wifi voice role
+wifi_voice_role = env['WIFI_VOICE_ROLE']
+assert(wifi_voice_role in ('dongle', 'headset'))
+if wifi_voice_role == 'dongle':
+    env['CPPDEFINES'] += ['CFG_WIFI_VOICE_ROLE_DONGLE']
+else:
+    env['CPPDEFINES'] += ['CFG_WIFI_VOICE_ROLE_HEADSET']
+
+# bt_stack
+if bt_stack != 'none':
+    if env['BT_PATCH_MODE'] == 'tws':
+        env['CPPDEFINES'] += ['CFG_BT_PATCH_TWS']
+    env['CPPDEFINES'] += ['CFG_BT_STACK']
+    env['ASMDEFINES'] += ['CFG_BT_STACK']
+    if env['A2DP'] == "off":
+        env['CPPDEFINES'] += ['CFG_A2DP_NOT_SUPPORT']
+    if env['BT_TWS'] == "on":
+        if env['TWS_ROLE'] == "master":
+            env['CPPDEFINES'] += ['CFG_TWS_ROLE_MASTER']
+        elif env['TWS_ROLE'] == "slave":
+            env['CPPDEFINES'] += ['CFG_TWS_ROLE_SLAVE']
+        else:
+            env['CPPDEFINES'] += ['CFG_TWS_ROLE_NONE']
+        if env['BT_TWS_PLUS'] == "on":
+            env['CPPDEFINES'] += ['CFG_TWS_PLUS']
+    else:
+        if env['A2DP_SOURCE'] == "on":
+            env['CPPDEFINES'] += ['CFG_A2DP_SOURCE_SUPPORT']
+        if env['HFP_AG'] == "on":
+            env['CPPDEFINES'] += ['CFG_HFP_AG_SUPPORT']
+        if env['AIC_VENDOR_ADV'] == "on":
+            env['CPPDEFINES'] += ['CFG_AIC_VENDOR_ADV']
+        if env['LINK_ONE'] == "on":
+            env['CPPDEFINES'] += ['CFG_LINK_ONE']
+    if env['BT_OTA'] == "on":
+        env['CPPDEFINES'] += ['CFG_BT_OTA']
+        env['OTA'] = 'on'
+        if env['BT_OTA_BOX'] == "on":
+            env['FATFS'] = 'on'
+            env['CPPDEFINES'] += ['CFG_BT_OTA_BOX']
+    if env['BLE_START_CLOSE'] == "on":
+	    env['CPPDEFINES'] += ['CFG_BLE_START_CLOSE']
+
+# bt customer
+if env['BT_USER'] == 'on':
+    env['CPPDEFINES'] += ['CFG_BT_USER']
+
+# aon
+if plf not in ['aic8800']:
+    env['AON'] = 'off'
+if env['AON'] == 'on':
+    env['CPPDEFINES'] += ['CFG_AON']
+
+# m2d
+if env['M2D'] == 'ble':
+    if env['BT_BLE'] == 'on':
+        env['CPPDEFINES'] += ['CFG_M2D_BLE']
+elif env['M2D'] == 'wifi':
+    env['CPPDEFINES'] += ['CFG_M2D_WIFI']
+elif env['M2D'] == 'wb':
+    env['CPPDEFINES'] += ['CFG_M2D_WB']
+
+# m2d ota
+if env['M2D_OTA'] == 'on':
+    env['CPPDEFINES'] += ['CFG_M2D_OTA']
+    env['ASMDEFINES'] += ['CFG_M2D_OTA']
+    env['OTA'] = 'on'
+
+ble_prf_def_list = []
+ble_prf_inc_list = []
+ble_prf_src_list = []
+ble_prf_def_list = []
+
+# ble_stack
+if env['BT_BLE'] == 'on':
+    if env['BLE_ONLY'] == 'on':
+        env['CPPDEFINES'] += ['CFG_BLE_ONLY']
+    if env['BTDM'] == 'on':
+        env['CPPDEFINES'] += ['CFG_BTDM']
+    if env['BLE_DFT_STATE'] == 'adv':
+        env['CPPDEFINES'] += ['BLE_DFT_ADV']
+    elif env['BLE_DFT_STATE'] == 'scan':
+        env['CPPDEFINES'] += ['BLE_DFT_SCAN']
+    elif env['BLE_DFT_STATE'] == 'init':
+        env['CPPDEFINES'] += ['BLE_DFT_INIT']
+    else:
+        env['CPPDEFINES'] += ['BLE_DFT_NONE']
+    env['CPPDEFINES'] += ['CFG_BLE_STACK']
+    env['ASMDEFINES'] += ['CFG_BLE_STACK']
+    env['CPPDEFINES'] += ['CFG_HCITL']
+    env['CPPDEFINES'] += ['CFG_HCITL']
+    env['CPPDEFINES'] += ['CFG_SEC_CON']
+    if env['BLE_WAKEUP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_BLE_WAKEUP']
+    if env['BLE_DAP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_BLE_DAP']
+    if BLE_EMB_PRESENT or BLE_HOST_PRESENT:
+    # BLE role
+        if env['BLEROLE'] == 'broadcaster':
+            env['CPPDEFINES'] += ['CFG_BROADCASTER']
+        elif env['BLEROLE'] == 'observer':
+            env['CPPDEFINES'] += ['CFG_OBSERVER']
+        elif env['BLEROLE'] == 'peripheral':
+            env['CPPDEFINES'] += ['CFG_PERIPHERAL']
+        elif env['BLEROLE'] == 'central':
+            env['CPPDEFINES'] += ['CFG_CENTRAL']
+        elif env['BLEROLE'] == 'noncon':
+            env['CPPDEFINES'] += ['CFG_BROADCASTER']
+            env['CPPDEFINES'] += ['CFG_OBSERVER']
+        else:
+            env['CPPDEFINES'] += ['CFG_ALLROLES']
+    if BLE_HOST_PRESENT:
+        env['CPPDEFINES'] += ['CFG_HOST']
+    if BLE_EMB_PRESENT or BLE_HOST_PRESENT:
+        env['CPPDEFINES'] += ['CFG_BLE']
+    if BLE_APP_PRESENT:
+        env['CPPDEFINES'] += ['CFG_APP']
+
+    env['CPPDEFINES'] += ['CFG_APP_SEC']
+
+    if env['BLE_APP_HT'] == 'on':
+        env['CPPDEFINES'] += ['CFG_APP_HT']
+        env['HTPT']     = 'on'
+    if env['BLE_APP_HID'] == 'on':
+        env['CPPDEFINES'] += ['CFG_APP_HID']
+        env['BASS']     = 'on'
+        env['HOGPD']    = 'on'
+    if env['BLE_APP_HR'] == 'on':
+        env['CPPDEFINES'] += ['CFG_APP_HR']
+        env['HRPS']     = 'on'
+    if env['BLE_APP_DIS'] == 'on':
+        env['CPPDEFINES'] += ['CFG_APP_DIS']
+        env['DISS']     = 'on'
+    if env['BLE_APP_SMARTCONFIG'] == 'on':
+        env['CPPDEFINES'] += ['CFG_APP_SMARTCONFIG']
+        env['SMARTCONFIGS']     = 'on'
+    if env['BLE_APP_AUDTRANSMIT'] == 'server':
+        env['CPPDEFINES'] += ['CFG_APP_AUDTRANSMITS']
+        env['AUDTRANSMITS'] = 'on'
+    if env['BLE_APP_AUDTRANSMIT'] == 'client':
+        env['CPPDEFINES'] += ['CFG_APP_AUDTRANSMITC']
+        env['AUDTRANSMITC'] = 'on'
+    if env['BLE_APP_UDF'] == 'server':
+        env['CPPDEFINES'] += ['CFG_APP_UDFS']
+        env['UDFS'] = 'on'
+    if env['BLE_APP_UDF'] == 'client':
+        env['CPPDEFINES'] += ['CFG_APP_UDFC']
+        env['UDFC'] = 'on'
+    if env['BLE_APP_UDF'] == 'all_role':
+        env['CPPDEFINES'] += ['CFG_APP_UDFC']
+        env['CPPDEFINES'] += ['CFG_APP_UDFS']
+        env['UDFS'] = 'on'
+        env['UDFC'] = 'on'
+    env['CPPDEFINES'] += ['CFG_PRF']
+    env['CPPDEFINES'] += ["CFG_NB_PRF=%s" % (env['BLE_NBPRF'])]
+    def ble_profile_import(name, abs_path, flag = None):
+        """Import sourcelist and includelist from profiles"""
+        global ble_prf_inc_list
+        global ble_prf_src_list
+        global ble_prf_def_list
+        global ble_prf_ip_dir
+
+        name = name.lower()
+        abs_path = abs_path.lower()
+        if(flag == None):
+            flag = name.upper()
+
+
+        if (env[flag] == 'on'):
+            # include profile utils
+            if (ble_prf_ip_dir not in ble_prf_inc_list):
+                ble_prf_def_list += ['CFG_PRF']
+                ble_prf_def_list += ["CFG_NB_PRF=%s" % (env['BLE_NBPRF'])]
+
+            #include profile common api
+            if (join(ble_prf_ip_dir, abs_path) not in ble_prf_inc_list):
+                ble_prf_inc_list += [join(ble_prf_ip_dir, abs_path)]
+
+            # include profile source and API
+            ble_prf_def_list += ['CFG_PRF_%s' % (flag)]
+            #ble_prf_inc_list += [join(ble_prf_ip_dir, abs_path, name, 'api')]
+            #if env['AON'] == 'on':
+            #    ble_prf_inc_list += [join(ble_prf_ip_dir, abs_path, name, 'src')]
+            #if (env['USE_LIB_BT'] == 'off'):
+            #    ble_prf_src_list += scutils.file_list_read(env, join(ble_prf_ip_dir, abs_path, name, 'sourcelist.txt'), join(abs_path, name, 'src'))
+
+    # proximity
+    ble_profile_import('PROXM', 'PROX', 'PXPM')
+    ble_profile_import('PROXR', 'PROX', 'PXPR')
+    # find me
+    ble_profile_import('FINDL', 'FIND', 'FMPL')
+    ble_profile_import('FINDT', 'FIND', 'FMPT')
+    # health thermometer
+    ble_profile_import('HTPC', 'HTP')
+    ble_profile_import('HTPT', 'HTP')
+    # device information service
+    ble_profile_import('DISC', 'DIS')
+    ble_profile_import('DISS', 'DIS')
+    # Blood pressure
+    ble_profile_import('BLPC', 'BLP')
+    ble_profile_import('BLPS', 'BLP')
+    # Heart Rate
+    ble_profile_import('HRPC', 'HRP')
+    ble_profile_import('HRPS', 'HRP')
+    # time
+    ble_profile_import('TIPC', 'TIP')
+    ble_profile_import('TIPS', 'TIP')
+    # Scan parameters
+    ble_profile_import('SCPPC', 'SCPP')
+    ble_profile_import('SCPPS', 'SCPP')
+    # Battery service
+    ble_profile_import('BASC', 'BAS')
+    ble_profile_import('BASS', 'BAS')
+    # HID
+    ble_profile_import('HOGPD', 'HOGP')
+    ble_profile_import('HOGPBH', 'HOGP')
+    ble_profile_import('HOGPRH', 'HOGP')
+    # Glucose
+    ble_profile_import('GLPC', 'GLP')
+    ble_profile_import('GLPS', 'GLP')
+    # running speed and cadence
+    ble_profile_import('RSCPC', 'RSCP')
+    ble_profile_import('RSCPS', 'RSCP')
+    # cycle speed and cadence
+    ble_profile_import('CSCPC', 'CSCP')
+    ble_profile_import('CSCPS', 'CSCP')
+    # cycle power
+    ble_profile_import('CPPC', 'CPP')
+    ble_profile_import('CPPS', 'CPP')
+    # Localization profile
+    ble_profile_import('LANC', 'LAN')
+    ble_profile_import('LANS', 'LAN')
+    # Alert Notification
+    ble_profile_import('ANPC', 'ANP')
+    ble_profile_import('ANPS', 'ANP')
+    # Phone Alert
+    ble_profile_import('PASPC', 'PASP')
+    ble_profile_import('PASPS', 'PASP')
+    # Weight Scale
+    ble_profile_import('WSCS', 'WSCP')
+    ble_profile_import('WSCC', 'WSCP')
+    # Body Composition
+    ble_profile_import('BCSS', 'BCS')
+    ble_profile_import('BCSC', 'BCS')
+    # User Data Service
+    ble_profile_import('UDSS', 'UDS')
+    ble_profile_import('UDSC', 'UDS')
+    # Ble Smartconfig
+    ble_profile_import('SMARTCONFIGS', 'SMARTCONFIG')
+    # Ble Audtransmit Service
+    ble_profile_import('AUDTRANSMITS', 'AUDTRANSMIT')
+    ble_profile_import('AUDTRANSMITC', 'AUDTRANSMIT')
+    # Ble User Defined Service
+    ble_profile_import('UDFS', 'UDF')
+    ble_profile_import('UDFC', 'UDF')
+
+# WIFI_BT_COMBO
+if product == 'host-wb':
+    env['CPPDEFINES'] += ['CFG_WIFI_BT_COMBO']
+
+# HW_SBC
+if env['HW_SBC'] == 'on':
+    env['CPPDEFINES'] += ['CFG_HW_SBC']
+
+# audio used
+if env['AUD_USED'] == 'on':
+    env['CPPDEFINES'] += ['CFG_AUD_USED']
+
+# bt audio
+if bt_audio != 'none':
+    env['CPPDEFINES'] += ['CFG_BT_AUDIO']
+    env['CPPDEFINES'] += ['HAVE_CONFIG_H']
+
+# Wi-Fi audio
+if env['WIFI_AUDIO'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WIFI_AUDIO']
+
+# USB BT
+if env['USB_BT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_USB_BT']
+
+# audio
+if env['AUDIO'] == 'on':
+    env['CPPDEFINES'] += ['CFG_AUDIO']
+
+# audio stream input output
+if env['ASIO'] == 'on':
+    env['CPPDEFINES'] += ['CFG_ASIO']
+
+# aac
+if aac != 'none':
+    env['CPPDEFINES'] += ['A2DP_AAC_ENABLE']
+
+# BT prompt
+if env['BT_PROMPT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_BT_PROMPT']
+
+# lang
+if lang == 'en':
+    env['CPPDEFINES'] += ['CFG_LANG_EN']
+elif lang == 'cn':
+    env['CPPDEFINES'] += ['CFG_LANG_CN']
+else:
+    env['CPPDEFINES'] += ['CFG_LANG_EN']
+
+# AIC1000 MIC matrix
+assert(env['AIC1000_MIC_MATRIX'] in ['0', '1', '2', '3', '4', '5'])
+env['CPPDEFINES'] += ['CFG_AIC1000_MIC_MATRIX=' + env['AIC1000_MIC_MATRIX']]
+
+# Use external codec AIC1000
+if env['EXT_AIC1000'] == 'on':
+    env['CPPDEFINES'] += ['CFG_EXT_AIC1000']
+
+# Generate I2S MCLK
+if env['HCLK_MCLK'] == 'on':
+    env['CPPDEFINES'] += ['CFG_HCLK_MCLK']
+
+# PMIC is valid or not
+if env['PMIC'] == 'on':
+    env['CPPDEFINES'] += ['CFG_PMIC']
+    assert(env['PMIC_VER'] in ['full', 'lite', 'aud', 'inner'])
+    if plf in ['aic8800mc', 'aic8800m40']:
+        env['PMIC_VER'] = 'inner'
+    env['CPPDEFINES'] += ['CFG_PMIC_VER_' + env['PMIC_VER'].upper()]
+    if env['PMIC_VER'] in ['aud', 'inner']:
+        env['PMIC_ITF'] = 'psim'
+    else:
+        assert(env['PMIC_ITF'] in ['asdma', 'psim'])
+    env['CPPDEFINES'] += ['CFG_PMIC_ITF_' + env['PMIC_ITF'].upper()]
+    # Low power mode enable
+    if env['PMIC_LP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_PMIC_LP']
+    # Use ldo/dcdc/all(ldo+dcdc) vcore09
+    assert(env['PMIC_VCORE'] in ['ldo', 'dcdc', 'all'])
+    env['CPPDEFINES'] += ['CFG_PMIC_' + env['PMIC_VCORE'].upper() + '_VCORE']
+    # Vcore calibration enable
+    if env['VCORE_CALIB'] == 'on':
+        env['CPPDEFINES'] += ['CFG_VCORE_CALIB']
+    # Low power 128k derived from lpo 512k
+    if env['LPO_512K'] == 'on':
+        env['CPPDEFINES'] += ['CFG_LPO_512K']
+    # Generate I2S MCLK
+    if env['PMIC_MCLK'] == 'on':
+        env['CPPDEFINES'] += ['CFG_PMIC_MCLK']
+    # PMIC option: voltage drop
+    if env['DCDC_CORE_DROP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_DCDC_CORE_DROP']
+    if env['DCDC_RF_DROP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_DCDC_RF_DROP']
+    if env['LDO_VCORE09_DROP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_LDO_VCORE09_DROP']
+    if env['LDO_VRTC09_DROP'] == 'on':
+        env['CPPDEFINES'] += ['CFG_LDO_VRTC09_DROP']
+
+# Low power code in RAM
+if env['LPIRAM'] == 'on':
+    env['CPPDEFINES'] += ['CFG_LPIRAM']
+
+# Vcore calibration enable
+if env['PRERELEASE_CODE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_PRERELEASE_CODE']
+
+# debug mode
+if env['DBG'] == 'on':
+    env['CPPDEFINES'] += ['CFG_DBG']
+
+# Tracer
+if env['TRC'] != 'off':
+    env['TRC_REGS'] = []
+    env['CPPDEFINES'] += ['CFG_TRC_EN']
+    if env['TRC'] == 'all':
+        env['CPPDEFINES'] += ['CFG_TRC_ALL']
+    else:
+        for key in env['TRC'].split(','):
+            env['CPPDEFINES'] += ['CFG_TRC_' + key]
+else:
+    env['TRC_DICT'] = 'off'
+
+# STDLIB
+if env['STDLIB'] == 'on':
+    env['CPPDEFINES'] += ['CFG_STDLIB']
+    env['ASMDEFINES'] += ['CFG_STDLIB']
+
+# Fault handler
+if env['FHDLR'] == 'on':
+    env['CPPDEFINES'] += ['CFG_FHDLR']
+    if buildtool == 'armcc_5':
+        env['ASMDEFINES'] += ['CFG_FHDLR SETL {TRUE}']
+    else:
+        env['ASMDEFINES'] += ['CFG_FHDLR']
+
+if wifi_hostif != 'none':
+    if plf in ['aic8800'] and nets != 'none':
+        env['ASMDEFINES'] += ['CFG_USB_MEM']
+
+if env['WIFI_AUD_MEM'] == 'on':
+    env['ASMDEFINES'] += ['CFG_USB_MEM']
+
+# Console
+if env['CONSOLE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_CONSOLE']
+    assert(env['ATCMD'] == 'off');
+
+# AT Command
+if env['ATCMD'] == 'on':
+    env['CPPDEFINES'] += ['CFG_ATCMD']
+    assert(env['CONSOLE'] == 'off');
+
+# Letter Shell
+if env['LETTER_SHELL'] == 'on':
+    env['CPPDEFINES'] += ['CFG_LETTER_SHELL']
+    assert(env['CONSOLE'] == 'off' and env['ATCMD'] == 'off');
+
+# OTA
+if env['OTA'] == 'on':
+    env['CPPDEFINES'] += ['CFG_OTA']
+
+# DSP
+if env['DSP'] == 'on':
+    env['CPPDEFINES'] += ['CFG_DSP']
+
+# GSENSOR
+if env['GSENSOR'] == 'on':
+    env['CPPDEFINES'] += ['CFG_GSENSOR']
+
+#I2CM_SFT
+if env['I2CM_SFT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_I2CM_SFT']
+
+# LIGHT_SENSOR
+if env['LIGHT_SENSOR'] == 'on':
+    env['CPPDEFINES'] += ['CFG_LIGHT_SENSOR']
+
+# FATFS
+if test == 'sdcard' or test == 'usb_host':
+    env['FATFS'] = 'on'
+if env['FATFS'] == 'on':
+    env['CPPDEFINES'] += ['CFG_FATFS']
+
+# Heap Size
+env['ASMDEFINES'] += ['__HEAP_SIZE=' + env['HEAP_SIZE']]
+
+# Code Start Address
+env['CPPDEFINES'] += ['CODE_START_ADDR=' + env['CODE_START_ADDR']]
+
+# ROM Version
+assert(env['ROM_VER'] in ('2', '3', '4', 'auto'))
+if env['ROM_VER'] == '4':
+    env['ROM_VER'] = '3'
+    env['CPPDEFINES'] += ['CFG_BOOT_ROM_VER=4']
+elif env['ROM_VER'] == 'auto':
+    env['ROM_VER'] = '255'
+if env['PMIC_VER'] == 'aud' and test == 'none':
+    assert(int(env['ROM_VER']) >= 3)
+env['CPPDEFINES'] += ['CFG_ROM_VER=' + env['ROM_VER']]
+
+# RAM optimization
+if env['RAM_OPT'] == 'on':
+    env['ASMDEFINES'] += ['CFG_RAM_OPT']
+    env['CPPDEFINES'] += ['CFG_RAM_OPT']
+    env['FLASH_FW'] = 'on'
+
+if env['FLASH_FW'] == 'on':
+    env['CPPDEFINES'] += ['CFG_FLASH_FW']
+    env['WIFI_RAM_VER'] = 'on'
+
+# Use RAM Version
+if env['BOOT_RAM_VER'] == 'on':
+    env['CPPDEFINES'] += ['CFG_BOOT_RAM_VER']
+if env['WIFI_RAM_VER'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WIFI_RAM_VER']
+if env['BTDM_RAM_VER'] == 'on':
+    env['CPPDEFINES'] += ['CFG_BTDM_RAM_VER']
+if env['AON_RAM_VER'] == 'on':
+    env['CPPDEFINES'] += ['CFG_AON_RAM_VER']
+
+if env['BT_TESTMODE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_BT_TESTMODE']
+
+if env['WIFI_TESTMODE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WIFI_TESTMODE']
+
+if env['WIFI_TX_TASK'] == 'on':
+    env['CPPDEFINES'] += ['CFG_WIFI_TX_TASK']
+
+# CODEC BOARD Version
+assert(env['CODEC_BOARD_VER'] in ('0', '1', '2'))
+env['CPPDEFINES'] += ['CFG_CODEC_BOARD_VER=' + env['CODEC_BOARD_VER']]
+
+# USB Device
+if env['USB_DEVICE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_USB_DEVICE']
+
+# USB Device Audio
+if env['USB_DEVICE_AUDIO'] == 'on':
+    env['CPPDEFINES'] += ['CFG_USB_DEVICE_AUDIO']
+
+# USB Audio Sampling Frequency
+assert(env['USB_AUDIO_FREQ'] in ('192k', '96k', '48k', '44_1k', '16k'))
+env['CPPDEFINES'] += ['CFG_USB_AUDIO_FREQ_' + env['USB_AUDIO_FREQ'].upper()]
+
+# USB Device MSC
+if env['USB_DEVICE_MSC'] == 'on':
+    env['CPPDEFINES'] += ['CFG_USB_DEVICE_MSC']
+
+# KEY_MODULE
+if env['KEY_MODULE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_KEY_MODULE']
+
+if env['LED_MODULE'] == 'on':
+    env['CPPDEFINES'] += ['CFG_LED_MODULE']
+
+if env['MQTT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_MQTT']
+
+if env['RTP'] == 'on':
+    env['CPPDEFINES'] += ['CFG_RTP']
+
+if env['DPD'] == 'on':
+    env['CPPDEFINES'] += ['CFG_DPD']
+
+# FLASH FAT
+if env['FLASH_FAT'] == 'on':
+    env['CPPDEFINES'] += ['CFG_FLASH_FAT']
+
+env['CPPDEFINES'] += ['CFG_CUR_GIT_REV=' + scutils.get_git_string()]
+env['CPPDEFINES'] += ['CFG_BUILD_CMD=' + env['BUILD_CMD']]
+
+#-----------------------------------------------------------
+# List of included modules
+#-----------------------------------------------------------
+modules_list = ['dbg']
+if env['CONSOLE'] == 'on':
+    modules_list += ['console']
+    env['COMMON'] = 'on'
+
+if env['ATCMD'] == 'on':
+    modules_list += ['atcmd']
+    env['COMMON'] = 'on'
+
+if env['LETTER_SHELL'] == 'on':
+    modules_list += ['letter-shell-v3']
+
+if env['DSP'] == 'on':
+    env['COMMON'] = 'on'
+
+if rtos != 'none':
+    modules_list += ['rtos']
+    env['COMMON'] = 'on'
+
+if env['APPS'] == 'on':
+    modules_list += ['apps']
+
+if bt_stack != 'none':
+    if env['BLE_ONLY'] == 'off':
+        modules_list += ['bt_task']
+    else:
+        modules_list += ['ble_task']
+    if env['AON'] == 'on':
+        modules_list += ['aon']
+
+if env['TEST'] == 'microhost':
+    env['COMMON'] = 'on'
+
+if env['FATFS'] == 'on':
+    modules_list += ['fatfs']
+
+if env['GSENSOR'] == 'on' or test == 'gsensor':
+    modules_list += ['gsensor']
+
+if env['SCREEN'] == 'on' or test == 'screen':
+    modules_list += ['screen']
+
+if env['EPAPER'] == 'on' or test == 'epaper':
+    modules_list += ['epaper']
+
+if env['LIGHT_SENSOR'] == 'on':
+    modules_list += ['light_sensor']
+
+if env['XYZMDM'] == 'on' or test == 'upgrade':
+    modules_list += ['xyzmodem']
+
+if env['XMODEM'] == 'on' or test == 'xmodem':
+    modules_list += ['esp-xmodem']
+
+if env['MINILZO'] == 'on' or test == 'minilzo':
+    modules_list += ['minilzo']
+
+if env['SOFTWDG'] == 'on':
+    modules_list += ['softwdg']
+
+if env['TEMP_COMP'] == 'on':
+    modules_list += ['temp_comp']
+
+if env['WEBCLIENT'] == 'on':
+    modules_list += ['webclient']
+
+if env['CJSON'] == 'on' or test == 'cjson':
+    modules_list += ['cJSON']
+
+if env['OTA'] == 'on':
+    modules_list += ['ota']
+
+if env['KEY_MODULE'] == 'on':
+    modules_list += ['key']
+
+if env['LED_MODULE'] == 'on':
+    modules_list += ['led']
+
+if env['M2D'] != 'none':
+    modules_list += ['m2d']
+
+if env['COMMON'] == 'on':
+    modules_list += ['common']
+
+#-----------------------------------------------------------
+# Input files
+#-----------------------------------------------------------
+
+
+# Import all required modules
+includelist, modules_sourcelist = scutils.modules_import(env, modules_list, modules_dir)
+
+#
+# c include files
+#
+
+includelist += scutils.file_list_read(env, os.path.join(plf_config_dir, 'includelist' + '.txt'), plf_src_dir)
+if tgtmode != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(tgtmode_config_dir, 'includelist.txt'), tgtmode_dir)
+if rtos != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(rtos_config_dir, 'includelist.txt'), rtos_dir)
+if test != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(test_config_dir, 'includelist.txt'), test_dir)
+if application != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(application_config_dir, 'includelist.txt'), application_dir)
+if bt_stack != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(bt_stack_dir, 'config', 'includelist.txt'), bt_stack_dir)
+    if env['BT_BLE'] == 'on':
+        includelist += ble_prf_inc_list
+if utils != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(utils_config_dir, 'includelist.txt'), utils_dir)
+if audio != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(audio_config_dir, 'includelist.txt'), audio_dir)
+if wifi_stack != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(wifi_stack_config_dir, 'includelist.txt'), wifi_stack_dir)
+    if nets != 'none':
+        includelist += scutils.file_list_read(env, os.path.join(nets_dir, 'config', 'includelist.txt'), nets_dir)
+        includelist += scutils.file_list_read(env, os.path.join(wpa_dir, 'config', 'includelist.txt'), wpa_dir)
+        if env['WAPI'] == 'on' and env['USE_LIB_WAPI'] == 'off':
+            includelist += scutils.file_list_read(env, os.path.join(wapi_dir, 'config', 'includelist.txt'), wapi_dir)
+if crypto != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(crypto_dir, 'config', 'includelist.txt'), crypto_dir)
+
+if algo == 'on':
+    includelist += scutils.file_list_read(env, os.path.join(algo_dir, 'config', 'includelist.txt'), algo_dir)
+
+if product == 'host-wb':
+    includelist += scutils.file_list_read(env, os.path.join(coex_dir, 'config', 'includelist.txt'), coex_dir)
+if dsp != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(dsp_config_dir, 'includelist.txt'), dsp_dir)
+if user_code != 'none':
+    includelist += scutils.file_list_read(env, os.path.join(user_dir, 'config', 'includelist.txt'), user_dir)
+env.Replace(CPPPATH = includelist)
+
+#
+# c source files
+#
+plf_src_list     = scutils.file_list_read(env, os.path.join(plf_config_dir, 'sourcelist' + '.txt'), '')
+if env['USE_LIB_DRV'] == 'off':
+    plf_src_list_lib = scutils.file_list_read(env, os.path.join(plf_config_dir, 'sourcelist_lib' + '.txt'), '')
+if tgtmode != 'none':
+    tgtmode_src_list = scutils.file_list_read(env, os.path.join(tgtmode_config_dir, 'sourcelist.txt'), '')
+if rtos != 'none':
+    rtos_src_list = scutils.file_list_read(env, os.path.join(rtos_config_dir, 'sourcelist.txt'), '')
+if test != 'none':
+    test_src_list = scutils.file_list_read(env, os.path.join(test_config_dir, 'sourcelist.txt'), '')
+if application != 'none':
+    application_src_list = scutils.file_list_read(env, os.path.join(application_config_dir, 'sourcelist.txt'), '')
+if bt_stack != 'none':
+    bt_stack_src_list    = scutils.file_list_read(env, os.path.join(bt_stack_dir, 'config', 'sourcelist.txt'))
+    if (env['USE_LIB_BT'] == 'off'):
+        bt_stack_src_list_lib    = scutils.file_list_read(env, os.path.join(bt_stack_dir, 'config', 'sourcelist_lib.txt'))
+    if env['BT_BLE'] == 'on':
+        env['CPPDEFINES'] += ble_prf_def_list
+if utils != 'none':
+    utils_src_list = scutils.file_list_read(env, os.path.join(utils_config_dir, 'sourcelist.txt'), '')
+if audio != 'none':
+    audio_src_list     = scutils.file_list_read(env, os.path.join(audio_config_dir, 'sourcelist.txt'), '')
+    if env['USE_LIB_AUDIO'] == 'off':
+        audio_src_list_lib = scutils.file_list_read(env, os.path.join(audio_config_dir, 'sourcelist_lib.txt'), '')
+if wifi_stack != 'none':
+    wifi_stack_src_list = scutils.file_list_read(env, os.path.join(wifi_stack_config_dir, 'sourcelist.txt'), '')
+    if wifi_hostif != 'none':
+        if env['GEN_LIB_WIFI'] == 'on':
+            wifi_stack_src_list_lib = scutils.file_list_read(env, os.path.join(wifi_stack_config_dir, 'sourcelist_hostif.txt'), '')
+            if env['DEVICE_IPC'] == 'on':
+                wifi_stack_src_list_lib2 = scutils.file_list_read(env, os.path.join(wifi_stack_config_dir, 'sourcelist_devipc.txt'), '')
+    if nets != 'none':
+        if env['GEN_LIB_WIFI'] == 'on':
+            if 'wifi_stack_src_list_lib' in locals().keys():
+                wifi_stack_src_list_lib += scutils.file_list_read(env, os.path.join(wifi_stack_config_dir, 'sourcelist_lib.txt'), '')
+            else:
+                wifi_stack_src_list_lib = scutils.file_list_read(env, os.path.join(wifi_stack_config_dir, 'sourcelist_lib.txt'), '')
+        nets_src_list   = scutils.file_list_read(env, os.path.join(nets_dir, 'config', 'sourcelist.txt'))
+        if env['WAPI'] == 'on' and env['USE_LIB_WAPI'] == 'off':
+            wapi_src_list   = scutils.file_list_read(env, os.path.join(wapi_dir, 'config', 'sourcelist.txt'))
+        if env['USE_LIB_WPA'] == 'off':
+            wpa_src_list    = scutils.file_list_read(env, os.path.join(wpa_dir, 'config', 'sourcelist.txt'))
+if product == 'host-wb':
+    coex_src_list       = scutils.file_list_read(env, os.path.join(coex_dir, 'config', 'sourcelist.txt'))
+if crypto != 'none':
+    crypto_src_list     = scutils.file_list_read(env, os.path.join(crypto_dir, 'config', 'sourcelist.txt'))
+if algo == 'on':
+    if env['USE_LIB_ALGO'] == 'off':
+        algo_src_list     = scutils.file_list_read(env, os.path.join(algo_dir, 'config', 'sourcelist.txt'))
+
+if dsp != 'none':
+    dsp_src_list     = scutils.file_list_read(env, os.path.join(dsp_config_dir, 'sourcelist.txt'), '')
+    if env['USE_LIB_DSP'] == 'off':
+        dsp_src_list_lib = scutils.file_list_read(env, os.path.join(dsp_config_dir, 'sourcelist_lib.txt'), '')
+if env['USB_DEVICE'] == 'on':
+    usbd_src_list    = scutils.file_list_read(env, os.path.join(plf_config_dir, 'sourcelist_usbd.txt'), '')
+    if env['USE_LIB_USBD'] == 'off':
+        usbd_src_list_lib    = scutils.file_list_read(env, os.path.join(plf_config_dir, 'sourcelist_usbd_lib.txt'), '')
+
+if user_code != 'none':
+    user_src_list   = scutils.file_list_read(env, os.path.join(user_dir, 'config', 'sourcelist.txt'))
+    if user_code == 'src':
+        user_src_list_lib = scutils.file_list_read(env, os.path.join(user_dir, 'config', 'sourcelist_lib.txt'), '')
+
+#
+# library files
+#
+lib_path_env = []
+lib_file_env = []
+
+test_lib_file = 'libstaticlib'
+if env['PMIC'] == 'on':
+    if env['PMIC_VER'] == 'lite':
+        drv_lib_file  = 'libdrv_lite'
+        audio_lib_file = 'libaudio_lite'
+    elif env['PMIC_VER'] == 'aud':
+        drv_lib_file  = 'libdrv_aud'
+        audio_lib_file = 'libaudio_aud'
+    elif env['PMIC_VER'] == 'full':
+        drv_lib_file  = 'libdrv_full'
+        audio_lib_file = 'libaudio_full'
+    elif env['PMIC_VER'] == 'inner':
+        drv_lib_file  = 'libdrv'
+        audio_lib_file = 'libaudio'
+    if wifi_stack == 'none':
+        if bt_stack != 'none' or env['BT_USER'] == 'on':
+            drv_lib_file  += '_bt'
+else:
+    drv_lib_file  = 'libdrv'
+    audio_lib_file = 'libaudio'
+if env['SOFTAP'] == 'on':
+    wifi_lib_file = 'libwifi_apsta'
+else:
+    wifi_lib_file = 'libwifi_sta'
+wifi_lib_file2 = 'libwifi2'
+if env['SOFTAP'] == 'on':
+    wpa_lib_file  = 'libwpa_apsta'
+else:
+    wpa_lib_file  = 'libwpa_sta'
+wapi_lib_file  = 'libwapi'
+algo_lib_file  = 'libalgo'
+
+if env['BT_TWS'] == 'on':
+    bt_lib_file = 'libbttws'
+else:
+    if env['BT_BLE'] == 'on':
+        if env['BLE_ONLY'] == 'on':
+            bt_lib_file = 'libbleonly'
+        else:
+            bt_lib_file = 'libblestatic'
+        if env['BTDM'] == 'on':
+            bt_lib_file = 'libbtdm'
+    else:
+        bt_lib_file = 'libbt'
+dsp_lib_file  = 'libdsp'
+usbd_lib_file = 'libusbd'
+user_lib_file = 'libuser'
+
+nodes_drv  = None
+nodes_wifi = None
+nodes_wifi2 = None
+nodes_wpa  = None
+nodes_bt = None
+nodes_audio = None
+nodes_dsp = None
+nodes_usbd = None
+nodes_wapi = None
+nodes_algo = None
+nodes_user = None
+
+#
+# Prepare object files build
+#
+if env['TRC_DICT'] == 'on':
+    env.AppendUnique(CCFLAGS = '-save-temps=obj ')
+    # keep comments
+    env.AppendUnique(CCFLAGS = '-C')
+
+nodes  = scutils.build_object(env, modules_sourcelist, modules_dir, obj_dir)
+nodes += scutils.build_object(env, plf_src_list, plf_src_dir, obj_dir)
+
+env['SRC_DIR'] = [modules_dir, plf_src_dir]
+
+if tgtmode != 'none':
+    nodes += scutils.build_object(env, tgtmode_src_list, tgtmode_dir, obj_dir, tgtmode_folder)
+    env['SRC_DIR'].append(tgtmode_dir)
+    tgt_lib_dir = os.path.join(tgtmode_dir, 'lib', buildtool)
+
+if rtos != 'none':
+    nodes += scutils.build_object(env, rtos_src_list, rtos_dir, obj_dir)
+    env['SRC_DIR'].append(rtos_dir)
+
+if test != 'none':
+    nodes += scutils.build_object(env, test_src_list, test_dir, obj_dir, test_folder)
+    env['SRC_DIR'].append(test_dir)
+if application != 'none':
+    nodes += scutils.build_object(env, application_src_list, application_dir, obj_dir, application_folder)
+    env['SRC_DIR'].append(application_dir)
+if utils != 'none':
+    nodes += scutils.build_object(env, utils_src_list, utils_dir, obj_dir)
+    env['SRC_DIR'].append(utils_dir)
+if audio != 'none':
+    if env['USE_LIB_AUDIO'] == 'on':
+        if tgtmode != 'none':
+            audio_lib_dir  = os.path.join(tgtmode_dir, 'lib', buildtool)
+        else:
+            audio_lib_dir  = os.path.join(audio_dir, 'lib', buildtool)
+        lib_path_env += [audio_lib_dir]
+        lib_file_env += [audio_lib_file]
+    else:
+        nodes_audio = scutils.build_object(env, audio_src_list_lib, audio_dir, obj_dir)
+    nodes += scutils.build_object(env, audio_src_list, audio_dir, obj_dir)
+    env['SRC_DIR'].append(audio_dir)
+if bt_stack != 'none':
+    if env['USE_LIB_BT'] == 'on':
+        if tgtmode != 'none':
+            bt_lib_dir  = os.path.join(tgtmode_dir, 'lib', buildtool)
+        else:
+            bt_lib_dir  = os.path.join(bt_stack_dir, 'lib', buildtool)
+        lib_path_env += [bt_lib_dir]
+        lib_file_env += [bt_lib_file]
+        if env['BT_BLE'] == "on":
+            nodes += scutils.build_object(env, bt_stack_src_list, bt_stack_dir, obj_dir)
+            env['SRC_DIR'].append(bt_stack_dir)
+    else:
+        nodes_bt = scutils.build_object(env, bt_stack_src_list_lib, bt_stack_dir, obj_dir)
+        if env['BT_BLE'] == "on":
+            nodes_bt += scutils.build_object(env, ble_prf_src_list, ble_prf_ip_dir, obj_dir)
+            nodes += scutils.build_object(env, ble_prf_src_list, ble_prf_ip_dir, obj_dir)
+        nodes += scutils.build_object(env, bt_stack_src_list, bt_stack_dir, obj_dir)
+        env['SRC_DIR'].append(bt_stack_dir)
+
+if wifi_stack != 'none':
+    if env['USE_LIB_WIFI'] == 'on':
+        wifi_lib_dir  = os.path.join(wifi_stack_dir, 'lib', plf, buildtool) if tgtmode == 'none' else tgt_lib_dir
+        if wifi_lib_dir not in lib_path_env:
+            lib_path_env += [wifi_lib_dir]
+        lib_file_env += [wifi_lib_file]
+        if wifi_hostif != 'none':
+            if env['DEVICE_IPC'] == 'on':
+                lib_file_env += [wifi_lib_file2]
+    elif env['GEN_LIB_WIFI'] == 'on':
+        nodes_wifi = scutils.build_object(env, wifi_stack_src_list_lib, wifi_stack_dir, obj_dir)
+        if wifi_hostif != 'none':
+            if env['DEVICE_IPC'] == 'on':
+                nodes_wifi2 = scutils.build_object(env, wifi_stack_src_list_lib2, wifi_stack_dir, obj_dir)
+    nodes += scutils.build_object(env, wifi_stack_src_list, wifi_stack_dir, obj_dir)
+    env['SRC_DIR'].append(wifi_stack_dir)
+
+    if nets != 'none':
+        nodes += scutils.build_object(env, nets_src_list, nets_dir, obj_dir)
+        env['SRC_DIR'].append(nets_dir)
+        if not env.has_key('WARNINGS'):
+            env['WARNINGS'] = ''
+        if env['USE_LIB_WPA'] == 'off':
+            nodes_wpa = scutils.build_object(env, wpa_src_list, wpa_dir, obj_dir)
+            nodes += nodes_wpa
+            env['SRC_DIR'].append(wpa_dir)
+        else:
+            wpa_lib_dir  = os.path.join(wpa_dir, 'lib', plf, buildtool) if tgtmode == 'none' else tgt_lib_dir
+            if wpa_lib_dir not in lib_path_env:
+                lib_path_env += [wpa_lib_dir]
+            lib_file_env += [wpa_lib_file]
+        if env['WAPI'] == 'on':
+            if env['USE_LIB_WAPI'] == 'off':
+                nodes_wapi = scutils.build_object(env, wapi_src_list, wapi_dir, obj_dir)
+                nodes += nodes_wapi
+                env['SRC_DIR'].append(wapi_dir)
+            else:
+                wapi_lib_dir  = os.path.join(wapi_dir, 'lib', plf, buildtool) if tgtmode == 'none' else tgt_lib_dir
+                if wapi_lib_dir not in lib_path_env:
+                    lib_path_env += [wapi_lib_dir]
+                lib_file_env += [wapi_lib_file]
+
+if product == 'host-wb':
+    nodes += scutils.build_object(env, coex_src_list, coex_dir, obj_dir)
+    env['SRC_DIR'].append(coex_dir)
+if crypto != 'none':
+    nodes += scutils.build_object(env, crypto_src_list, crypto_dir, obj_dir, crypto)
+    env['SRC_DIR'].append(crypto_dir)
+if algo == 'on':
+    if env['USE_LIB_ALGO'] == 'off':
+        nodes_algo = scutils.build_object(env, algo_src_list, algo_dir, obj_dir)
+        env['SRC_DIR'].append(algo_dir)
+        nodes += nodes_algo
+    else:
+        algo_lib_dir  = os.path.join(algo_dir, 'lib', plf, buildtool) if tgtmode == 'none' else tgt_lib_dir
+        if algo_lib_dir not in lib_path_env:
+            lib_path_env += [algo_lib_dir]
+        lib_file_env += [algo_lib_file]
+
+if env['USE_LIB_DRV'] == 'off':
+    nodes_drv = scutils.build_object(env, plf_src_list_lib, plf_src_dir, obj_dir)
+else:
+    drv_lib_dir  = os.path.join(plf_dir, 'lib', buildtool) if tgtmode == 'none' else tgt_lib_dir
+    if drv_lib_dir not in lib_path_env:
+        lib_path_env += [drv_lib_dir]
+    lib_file_env += [drv_lib_file]
+if dsp != 'none':
+    if env['USE_LIB_DSP'] == 'on':
+        if tgtmode != 'none':
+            dsp_lib_dir  = os.path.join(tgtmode_dir, 'lib', buildtool)
+        else:
+            dsp_lib_dir  = os.path.join(dsp_dir, 'lib', buildtool)
+        lib_path_env += [dsp_lib_dir]
+        lib_file_env += [dsp_lib_file]
+    else:
+        nodes_dsp = scutils.build_object(env, dsp_src_list_lib, dsp_dir, obj_dir)
+    nodes += scutils.build_object(env, dsp_src_list, dsp_dir, obj_dir)
+    env['SRC_DIR'].append(dsp_dir)
+
+if env['USB_DEVICE'] == 'on':
+    if env['USE_LIB_USBD'] == 'on':
+        if tgtmode != 'none':
+            usbd_lib_dir  = os.path.join(tgtmode_dir, 'lib', buildtool)
+        else:
+            usbd_lib_dir  = os.path.join(plf_dir, 'lib', buildtool)
+        lib_path_env += [usbd_lib_dir]
+        lib_file_env += [usbd_lib_file]
+    else:
+        nodes_usbd = scutils.build_object(env, usbd_src_list_lib, plf_src_dir, obj_dir)
+    nodes += scutils.build_object(env, usbd_src_list, plf_src_dir, obj_dir)
+
+if user_code != 'none':
+    user_lib_dir  = os.path.join(user_dir, 'lib', plf, buildtool)
+    if user_code == 'lib':
+        lib_path_env += [user_lib_dir]
+        lib_file_env += [user_lib_file]
+    else:
+        nodes_user = scutils.build_object(env, user_src_list_lib, user_dir, obj_dir, user_folder)
+        nodes += nodes_user
+    nodes += scutils.build_object(env, user_src_list, user_dir, obj_dir)
+    env['SRC_DIR'].append(user_dir)
+
+#-----------------------------------------------------------
+# Output prog
+#-----------------------------------------------------------
+
+# Generate and add the file containing the version/build date strings
+scutils.build_version_add(nodes, env, reg_build_dir)
+if 'common' in modules_list:
+    if env['GEN_SDK_VER'] == 'on':
+        scutils.build_sdk_version_update(env)
+    env['ASMDEFINES'] += ['CFG_VER_STR']
+    env['CPPDEFINES'] += ['CFG_VER_STR']
+
+if test == 'staticlib':
+    if tgtmode != 'none':
+        test_lib_dir  = os.path.join(tgtmode_dir, 'lib', buildtool)
+    else:
+        test_lib_dir   = os.path.join(test_dir, 'lib', buildtool)
+    lib_path_env += [test_lib_dir]
+    lib_file_env += [test_lib_file]
+
+if lib_path_env:
+    env.AppendUnique(LIBPATH = lib_path_env)
+if lib_file_env:
+    env.PrependUnique(LIBS = lib_file_env)
+
+if tgtmode == 'none':
+    libgen_dir = build_dir;
+else:
+    libgen_dir = build_dir;
+
+if env['GEN_LIB_DRV'] == 'on' and nodes_drv:
+    env.Library(os.path.join(libgen_dir, buildtool, drv_lib_file), nodes_drv)
+
+if env['GEN_LIB_WIFI'] == 'on':
+    if nodes_wifi:
+        env.Library(os.path.join(libgen_dir, buildtool, wifi_lib_file), nodes_wifi)
+    if nodes_wifi2:
+        env.Library(os.path.join(libgen_dir, buildtool, wifi_lib_file2), nodes_wifi2)
+
+if env['GEN_LIB_WPA'] == 'on' and nodes_wpa:
+    env.Library(os.path.join(libgen_dir, buildtool, wpa_lib_file), nodes_wpa)
+
+if env['GEN_LIB_WAPI'] == 'on' and nodes_wapi:
+    env.Library(os.path.join(libgen_dir, buildtool, wapi_lib_file), nodes_wapi)
+
+if env['GEN_LIB_BT'] == 'on' and nodes_bt:
+    env.Library(os.path.join(libgen_dir, buildtool, bt_lib_file), nodes_bt)
+
+if env['GEN_LIB_AUDIO'] == 'on' and nodes_audio:
+    env.Library(os.path.join(libgen_dir, buildtool, audio_lib_file), nodes_audio)
+
+if env['GEN_LIB_DSP'] == 'on' and nodes_dsp:
+    env.Library(os.path.join(libgen_dir, buildtool, dsp_lib_file), nodes_dsp)
+
+if env['GEN_LIB_USBD'] == 'on' and nodes_usbd:
+    env.Library(os.path.join(libgen_dir, buildtool, usbd_lib_file), nodes_usbd)
+
+if env['GEN_LIB_ALGO'] == 'on' and nodes_algo:
+    env.Library(os.path.join(libgen_dir, buildtool, algo_lib_file), nodes_algo)
+
+if user_code == 'src' and nodes_user:
+    env.Library(os.path.join(libgen_dir, buildtool, user_lib_file), nodes_user)
+
+# link the object files into an output file
+target = env.Program(os.path.join(build_dir, env['PROGNAME']), nodes)
+
+#-----------------------------------------------------------
+# Trace dictionary
+#-----------------------------------------------------------
+if env['TRC_DICT'] == 'on':
+    import strc_dict_builder
+    env.Decider('timestamp-newer')
+    env['BUILD_DIR'] = build_dir
+    action = Action(strc_dict_builder.trace_builder_action, strfunction="")
+    env.AddPostAction(target, action)
+
+#-----------------------------------------------------------
+# Additional targets
+#-----------------------------------------------------------
+# execute SAdditions Script
+exec scutils.load_script(os.path.join(plf_config_dir, 'SAdditions'))
+
+#-----------------------------------------------------------
+# Install and alias
+#-----------------------------------------------------------
+if env['INST']:
+    env.Install(env['INST'], target, PRINT_CMD_LINE_FUNC=scutils.outstr_inst)
+    Alias(ext_dir, env['INST'])
+else:
+    Alias(ext_dir, build_dir)

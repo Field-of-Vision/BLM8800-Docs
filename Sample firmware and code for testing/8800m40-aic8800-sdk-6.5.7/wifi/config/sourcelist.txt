@@ -1,0 +1,39 @@
+# wifi stack sources
+#if (env['NETS'] == 'lwip')
+    fhost/fhost_config.c
+    macif/$PLF/rom_patch.c
+#if (env['PLF'] == 'aic8800m40')
+#if (env['WIFI_HIB'] == 'on')
+    macif/$PLF/fmacfw_hib_api.c
+#endif #(env['WIFI_HIB'] == 'on')
+#if (env['FHOST_APP'] == 'rawdata')
+    macif/$PLF/fmacfw_api_rawdata.c
+#endif #(env['FHOST_APP'] == 'rawdata')
+#endif #(env['PLF'] == 'aic8800m40')
+#if ((env['WIFI_RAM_VER'] == 'on') and (env['WIFI_HIB'] != 'on') and (env['FHOST_APP'] != 'rawdata'))
+    macif/$PLF/fmacfw_api.c
+#endif #((env['WIFI_RAM_VER'] == 'on') and (env['WIFI_HIB'] != 'on') and (env['FHOST_APP'] != 'rawdata'))
+#if (env['WIFI_TESTMODE'] == 'on')
+    macif/$PLF/testmode_api.c
+#endif #(env['WIFI_TESTMODE'] == 'on')
+    macif/rwnx_rx.c
+#if (env['USE_LIB_WIFI'] == 'off')
+    include sourcelist_lib.txt
+#endif #(env['USE_LIB_WIFI'] == 'off')
+#endif #(env['NETS'] == 'lwip')
+#if (env['HOSTIF'] != 'none')
+    hostif/hostif_cfg.c
+    hostif/hostif_user.c
+#if (env['DEVICE_IPC'] == 'on')
+    hostif/devipc_cmd.c
+#endif #(env['DEVICE_IPC'] == 'on')
+#if (env['NETS'] == 'lwip')
+    hostif/fhostif_cmd.c
+#endif #(env['NETS'] == 'lwip')
+#if (env['USE_LIB_WIFI'] == 'off')
+    include sourcelist_hostif.txt
+#if (env['DEVICE_IPC'] == 'on')
+    include sourcelist_devipc.txt
+#endif #(env['DEVICE_IPC'] == 'on')
+#endif #(env['USE_LIB_WIFI'] == 'off')
+#endif #(env['HOSTIF'] != 'none')

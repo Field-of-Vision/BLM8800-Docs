@@ -1,0 +1,2 @@
+# Target Config Hardware
+    tgt_cfg_hw/hw_cfg.c

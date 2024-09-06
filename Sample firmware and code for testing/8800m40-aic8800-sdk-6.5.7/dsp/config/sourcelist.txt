@@ -1,0 +1,11 @@
+# dsp files
+    src/dsp_api.c
+    src/dsp_event.c
+    src/dsp_image.c
+#if (env['RTOS'] != 'none')
+    src/dsp_task.c
+#endif #(env['RTOS'] != 'none')
+
+#if (env['USE_LIB_DSP'] == 'off')
+    include sourcelist_lib.txt
+#endif #(env['USE_LIB_DSP'] == 'off')

@@ -1,0 +1,87 @@
+########################################################################################
+#
+# @file SAdditions
+#
+# @brief Additional script instructions for REFIP build
+#
+# Copyright (C) RivieraWaves 2009-2015
+#
+#########################################################################################
+
+
+#-----------------------------------------------------------
+# Additional link files
+#-----------------------------------------------------------
+
+# add the file where the link info must be stored
+linkinfo_path = os.path.join(build_dir, 'linkinfo.'+buildtool+'.txt')
+env.Replace(LINKINFOFILE = os.path.join('..', scutils.diff_path('#..', linkinfo_path)))
+linkmap_path = os.path.join(build_dir, 'linkmap.'+buildtool+'.txt')
+env.Replace(LINKMAPFILE = os.path.join('..', scutils.diff_path('#..', linkmap_path)))
+Depends(target, linkmap_path)
+
+# check if there is a link map file
+if buildtool == "rvds":
+    if env['CPU'] == 'Cortex-M1':
+        linkmap_path = os.path.join(plf_config_dir, 'maps', buildtool, 'map_ram_cortex.txt')
+    else:
+        linkmap_path = os.path.join(plf_config_dir, 'maps', buildtool, 'map_ram_arm.txt')
+if buildtool == "armcc_5":
+    if env['PRODUCT'] == 'host-wb':
+        ld_file = 'map_cm4_combo.txt'
+    elif env['PRODUCT'] == 'host-wifi':
+        ld_file = 'map_cm4_wifi.txt'
+    elif env['PRODUCT'] == 'host-bt':
+        ld_file = 'map_cm4_btdm.txt'
+    else:
+        ld_file = 'map_ram_cm4.txt'
+    linkmap_path = os.path.join(plf_config_dir, 'maps', buildtool, ld_file)
+elif buildtool == 'gnuarm':
+    linkmap_path = os.path.join(plf_config_dir, 'maps', buildtool, 'map_ram.txt')
+elif buildtool == 'armgcc_4_8':
+    if env['PRODUCT'] == 'host-wb':
+        if env['HOSTIF'] != 'none':
+            ld_file = 'map_cm4_ble_fhostif_wifi.txt'
+        else:
+            ld_file = 'map_cm4_combo.txt'
+    elif env['PRODUCT'] == 'host-dwb':
+        ld_file = 'map_cm4_devwifi_btdm.txt'
+    elif env['PRODUCT'] == 'host-wifi':
+        if env['HOSTIF'] != 'none':
+            if env['NETS'] == 'none':
+                ld_file = 'map_cm4_devwifi.txt'
+            else:
+                ld_file = 'map_cm4_fhostif_wifi.txt'
+        elif env['HS_IPERF'] == 'on':
+            ld_file = 'map_cm4_wifi_hsiperf.txt'
+        else:
+            ld_file = 'map_cm4_wifi.txt'
+    elif env['PRODUCT'] == 'host-bt':
+        ld_file = 'map_cm4_btdm.txt'
+    else:
+        if env['TEST'] == 'microhost':
+            ld_file = 'map_cm4_microhost.txt'
+        else:
+            ld_file = 'map_cm4.txt'
+    linkmap_raw_path = os.path.join(plf_config_dir, 'maps', buildtool, ld_file)
+
+
+#-----------------------------------------------------------
+# Additional axf->bin step for RVDS and ARMGCC
+#-----------------------------------------------------------
+
+# only convert to binary for rvds
+if buildtool == "rvds":
+    # extra command to convert ELF to binary format
+    target = scutils.rvds_elf2bin(env, os.path.join(build_dir, env['PROGNAME']), target)
+if buildtool == "armcc_5":
+    scutils.armcc_5_elf2bin(env, os.path.join(build_dir, env['PROGNAME']), target)
+    scutils.armcc_5_elf2rcf(env, os.path.join(build_dir, env['PROGNAME']), target)
+    scutils.armcc_5_elf2dasm(env, os.path.join(build_dir, env['PROGNAME']), target)
+    scutils.armcc_5_elf2data(env, os.path.join(build_dir, env['PROGNAME']), target)
+elif buildtool == 'armgcc_4_8':
+    scutils.gcc_lds_preproc(env, linkmap_path, linkmap_raw_path)
+    scutils.gcc_elf2dasm(env, os.path.join(build_dir, env['PROGNAME']), target)
+    target = scutils.gcc_elf2bin(env, os.path.join(build_dir, env['PROGNAME']), target)
+    target = scutils.gcc_bin2rcf(env, os.path.join(build_dir, env['PROGNAME']), target)
+

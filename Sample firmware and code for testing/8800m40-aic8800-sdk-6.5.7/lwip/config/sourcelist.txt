@@ -1,0 +1,171 @@
+# Abstraction layer
+    net_al/net_al.c
+    net_al/net_tg_al.c
+    net_al/net_iperf_al.c
+# CORE files
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/init.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/def.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/dns.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/inet_chksum.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ip.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/mem.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/memp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/netif.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/pbuf.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/raw.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/stats.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/sys.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/tcp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/tcp_in.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/tcp_out.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/timeouts.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/udp.c
+
+# CORE4 files
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/autoip.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/dhcp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/etharp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/icmp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/igmp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/ip4_frag.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/ip4.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv4/ip4_addr.c
+
+# CORE6 files
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/dhcp6.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/ethip6.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/icmp6.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/inet6.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/ip6.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/ip6_addr.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/ip6_frag.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/mld6.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/core/ipv6/nd6.c
+
+# API files: The files which implement the sequential and socket APIs.
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/api_lib.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/api_msg.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/err.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/netbuf.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/netdb.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/netifapi.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/sockets.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/api/tcpip.c
+
+# NETIF files: Files implementing various generic network interface functions
+    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ethernet.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/slipif.c
+
+# PORT files: The files which implement the OS port.
+    lwip-STABLE-2_0_2_RELEASE_VER/ports/rtos/sys_arch.c
+
+#if (env['SOFTAP'] != 'off')
+# DHCPS
+     dhcps/dhcps.c
+#endif #(env['SOFTAP'] != 'off')
+
+## SIXLOWPAN files: 6LoWPAN
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/lowpan6.c
+#
+## PPP files: PPP
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/auth.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/ccp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/chap-md5.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/chap_ms.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/chap-new.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/demand.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/eap.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/ecp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/eui64.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/fsm.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/ipcp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/ipv6cp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/lcp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/magic.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/mppe.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/multilink.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/ppp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/pppapi.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/pppcrypt.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/pppoe.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/pppol2tp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/pppos.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/upap.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/utils.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/vj.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/polarssl/arc4.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/polarssl/des.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/polarssl/md4.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/polarssl/md5.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/netif/ppp/polarssl/sha1.c
+#
+## SNMP files: SNMPv2c agent
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_asn1.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_core.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_icmp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_interfaces.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_ip.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_snmp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_system.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_tcp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_mib2_udp.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_msg.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmpv3.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_netconn.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_pbuf_stream.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_raw.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_scalar.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_table.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_threadsync.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmp_traps.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmpv3_mbedtls.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/snmp/snmpv3_dummy.c
+#
+## HTTPD files: HTTP server
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/httpd/fs.c
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/httpd/httpd.c
+#
+#
+## SNTP files: SNTP client
+#if (env['SNTP'] == 'on')
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/sntp/sntp.c
+#endif #(env['SNTP'] == 'on')
+#
+## MDNS files: MDNS responder
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mdns/mdns.c
+#
+## NETBIOSNS files: NetBIOS name server
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/netbiosns/netbiosns.c
+#
+## TFTP files: TFTP server files
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/tftp/tftp_server.c
+#
+## MQTT files: MQTT client files
+#    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqtt/mqtt.c
+
+#if (env['MQTT'] != 'off')
+# MQTT files: MQTT client files
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqttclient/mqttclient.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/log/salof.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/log/fifo.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/platform/FreeRTOS/platform_memory.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/platform/FreeRTOS/platform_mutex.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/platform/FreeRTOS/platform_timer.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/random.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/mqtt_list.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/log/arch/freertos/arch.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/log/format.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTPacket.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTConnectClient.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTUnsubscribeClient.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTFormat.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTSubscribeClient.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTSerializePublish.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt/MQTTDeserializePublish.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/platform/FreeRTOS/platform_thread.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/network/nettype_tcp.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/network/nettype_tls.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/network/network.c
+    lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/platform/FreeRTOS/platform_net_socket.c
+#endif #(env['MQTT'] != 'off')

@@ -1,0 +1,8 @@
+# Abstraction layer
+   rtos_al
+
+# Include path
+   FreeRTOS/Source/include
+
+# Port layer
+   rtos_port/$ARCH/$BUILDTOOL/

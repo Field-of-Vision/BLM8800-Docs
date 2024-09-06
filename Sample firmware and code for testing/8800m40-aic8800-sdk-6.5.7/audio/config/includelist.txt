@@ -1,0 +1,32 @@
+#asio
+    asio
+
+#common
+    common
+
+#device
+    device
+
+#if (env['USE_LIB_AUDIO'] == 'off')
+    include ./config/includelist_lib.txt
+#else #(env['USE_LIB_AUDIO'] == 'off')
+
+#app
+    app
+
+#bt
+    bt/include
+    bt/include/usb_bt
+
+# process
+    process/eq
+    process/drc
+    process/audio_proc
+
+#wifi
+    wifi/include
+    wifi/include/wifi_headset
+    wifi/include/wifi_mic
+
+#endif #(env['USE_LIB_AUDIO'] == 'off')
+

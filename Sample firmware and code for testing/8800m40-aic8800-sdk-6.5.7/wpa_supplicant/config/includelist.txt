@@ -1,0 +1,16 @@
+# minimum wpa_supplicant files
+   wpa_supplicant
+   src
+   src/utils
+   src/crypto
+   src/l2_packet
+   src/rsn_supp
+   src/drivers
+#if (env['SOFTAP'] != 'off')
+   src/ap
+   src/radius
+   src/eap_se
+#if (env['HOSTAPD'] != 'off')
+   hostapd
+#endif #(env['HOSTAPD'] != 'off')
+#endif #(env['SOFTAP'] != 'off')

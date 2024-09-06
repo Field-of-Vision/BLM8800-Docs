@@ -1,0 +1,2 @@
+# command common files
+    src/fhost_command_common.c

@@ -1,0 +1,3 @@
+# example includes
+    src
+    ../command_common/src

@@ -1,0 +1,5 @@
+# Target Config
+    tgt_cfg
+
+# Target Config Hardware
+    tgt_cfg_hw

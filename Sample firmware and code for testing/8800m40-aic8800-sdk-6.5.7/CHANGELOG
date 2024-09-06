@@ -1,0 +1,546 @@
+ChangeLog for aic8800-sdk
+
+2024-05-21 - v6.5.7.4
+  * aic8800m40 update
+    - update light sleep cfg
+    - [wifi] update scan result
+    - [fhostif] add ble task init indication
+    - [8800m40] add delay after flash ms bit changed, avoid i-bus access err
+    - [BLE]add smp bonding console
+    - [BLE] add BLE_START_CLOSE for close ble default
+    
+  * aic8800mc update
+    - add usb dm calib
+    - [wifi] update scan result
+    - [fhostif] add ble task init indication
+    - [8800mc] add delay after flash ms bit changed, avoid i-bus access err
+    - [BLE]add smp bonding console
+    - [BLE] add BLE_START_CLOSE for close ble default
+    
+  * aic8800m update
+    - modify ble bridge handle check
+    - add wapi in wifi fhostif case
+    - [wifi] update scan result
+    - [fhostif] add ble task init indication
+    - [BLE]add smp bonding console
+    - [BLE] add BLE_START_CLOSE for close ble default
+    
+2024-05-01 - v6.5.7.3
+  * aic8800m40
+    - fix spp hanlde bug
+    - update driver sysctrl
+    - add declaration for 'wlan_set_dhcp_timeout'
+    - [BLE]fix bug about udfc task ID get.
+    - [hostif] fix usb flow control
+    - [BLE]fix bug about ble connect cancel.
+    - [wifi] cancel scan only if scan_in_progress
+
+  * aic8800mc
+    - fix spp hanlde bug
+    - update driver sysctrl
+    - modify the size of survey
+    - add declaration for 'wlan_set_dhcp_timeout'
+    - [BLE]fix bug about udfc task ID get.
+    - [hostif] fix usb flow control
+    - [BLE]fix bug about ble connect cancel.
+    - [wifi] cancel scan only if scan_in_progress
+
+    * aic8800m
+    - fix spp hanlde bug
+    - update driver sysctrl
+    - add declaration for 'wlan_set_dhcp_timeout'
+    - [BLE]fix bug about udfc task ID get.
+    - [hostif] fix usb flow control
+    - [BLE]fix bug about ble connect cancel.
+    - [wifi] cancel scan only if scan_in_progress
+
+2024-05-01 - v6.5.7.2
+  * aic8800m40
+    - add gpiob awakeup
+    - add api aic_ipcam_setting
+  * aic8800mc
+    - add api aic_ipcam_setting
+
+2024-04-26 - v6.5.7.1
+  * aic8800/aic8800mc/aic8800m40 update
+    - [BLE]modify ble user define profile function
+    - [BLE]modify exchange mtu api
+    - update all bt/btdm/bleonly libs
+
+2024-04-26 - v6.5.7.0
+  * aic8800 update
+    - rom patch for ap deauth send
+    - target_wifi_tls/target_wifi_sntp build
+    - sysctrl chip reboot
+    - access flash or cache in critical section
+  * aic8800mc update
+    - audio proc api
+    - sync bt patch
+    - pwrkey support dev_mode
+    - rom patch
+    - sysctrl chip reboot
+    - gpio hold api
+    - access flash or cache in critical section
+    - update uart1/2 deinit
+    - fix scan results cnt
+    - update key module
+  * aic8800m40 update
+    - sync bt patch
+    - pwrkey support dev_mode
+    - trng/us_ticker/i2cm bugfix
+    - wifi support dpd cal
+    - sysctrl chip reboot
+    - gpio hold api
+    - wifi fmacfw, fix WPA3+STDLIB connect timeout
+    - bt calib store & resume
+    - fix wifi_ble_fhostif map file
+    - access flash or cache in critical section
+    - modify target_btdm_wifi
+    - add the fw with dpd off & the max heap set
+    - update bootloader addr reserved for calib & wifi/bt info
+    - fix wifi deepsleep time related to pwr_open_delay
+  * wifi update
+    - fixed ip bugfix
+    - ipv6/mdns enabled by default
+    - reorder process fix
+    - vendor_hwconfig
+    - BWMODE support
+    - pwrloss support
+    - random mac addr
+    - fix lwip timer after wakeup from deepsleep
+  * btdm update
+    - fix bug about avrcp
+    - [BLE]add udfc multi connection
+    - added support for spp multilink
+    - [BLE]modify User Defined Client Profile process
+    - [BLE]UDFC process
+  * rtos update
+    - OSAL_TRACE
+    - STDLIB boot to main
+
+2024-01-27 - v6.5.6.0
+  * aic8800 update
+    - spi slave api
+    - iomux api
+    - audio proc api
+  * aic8800mc update
+    - flash chip_id_get api
+    - vflash sel low volt
+    - driver sdmmc
+    - add target_bt
+    - usb pu process
+    - wifi scan result parsing
+    - driver spi slave/iomux/i2c/pmic
+    - new usbd lib
+  * aic8800m40 update
+    - fix rf calib params
+    - flash chip_id_get api
+    - driver sdmmc/anareg
+    - usb pu process, eye diagram
+    - fmacfw
+    - driver spi slave/iomux/pwm/i2c/pmic
+    - audio proc api
+    - new target_wifi_rawdata
+    - new usbd lib
+  * wifi update
+    - agg disable api
+    - ap chan switch
+    - basic rate strategy
+    - fix rx reorder bug
+  * btdm update
+    - GAPM_ACTIVITY_STOPPED_IND
+    - fix ke sched
+    - rom patch
+    - fix buf align len bug
+    - ble deinit process
+  * modules update
+    - add minilzo
+  * fhostif update
+    - hostif_filter_type_get usage
+  * mqtt update
+    - fix mqtt-tls disconnected exceptionally memory leak bug
+
+2023-12-02 - v6.5.5.0
+  * aic8800 update
+    - uart api
+    - pwrkey setting
+    - [M2D]modify 8800 boot_startup.S ,add macro CFG_M2D_OTA for Image_Info
+    - new target 8800a_wifi_audio
+  * aic8800mc update
+    - uart/i2cm api
+    - flash protect api
+    - rom patch
+    - pwrkey setting
+  * aic8800m40 update
+    - uart/i2cm api
+    - update patch, fux bug about uart1 IOMUX in fw
+    - set BANG5G on as default
+    - flash protect api
+    - xtal_cap from flash calib info
+    - new target ble_wifi_fhostif_hiram_ret/wifi_wapi
+    - bt pon process
+    - wifi mem usage
+  * MQTT update
+    - add TLS connect
+  * BLE update
+    - add BLE User Defined Profile Server and Client
+    - fix udfs err
+    - rm unexpected usb poff
+    - light sleep process
+  * WiFi update
+    - pwrofst from flash calib info
+    - compatible lib for BAND5G=on/off
+    - new rwnx_rx.c
+    - add wep hex
+    - p2p support
+  * hostif update
+    - rx data process
+    - add rxdata optimization
+  * modules update
+    - esp-xmodem
+  * fhostif update
+    - ap pkt resend
+
+2023-10-21 - v6.5.4.0
+  * aic8800 update
+    - pwm/spi/pwrkey
+    - timer2 awake process
+    - pwrkey pon time process
+  * aic8800m40 update
+    - vendor hwconfig
+    - gpio/gpadc/uart_dma/spi
+    - default vflash
+    - libalgo.a
+    - bt/ble patch base
+  * ble update
+    - wakeup process
+  * wifi update
+    - get sta info
+    - wpa3 for flash+ram fw
+  * fhostif
+    - rx pkt reorder
+    - scan nonblock task
+
+2023-09-22 - v6.5.3.0
+  * aic8800 update
+    - flash+ram fw
+    - rom patch to fix continuous send_deauth
+  * aic8800mc update
+    - rom patch+flash fw
+    - new ChipIdGet api
+    - add gpioa20/21
+    - add pwrkey api
+    - i2cm regs
+  * aic8800m40 update
+    - ram fw
+    - add pwrkey api
+    - i2cm regs
+  * wifi update
+    - get associated sta's rssi
+    - fix reorder timer task bug
+    - wapi compatibility
+    - testmode
+    - support country code
+  * btdm update
+    - ble ext scan process
+    - ble wakeup process
+  * hostif update
+    - fix replenish rxq for dev_wifi
+    - dns port int filter mode
+  * ota update
+    - upg_image version check
+    - dev_wifi support m2d_ota
+  * rtos update
+    - task notify api
+    - dbg sscanf
+    - support cJSON module
+
+2023-08-02 - v6.5.2.0
+  * aic8800/aic8800mc/aic8800m40 
+    - add bt/wifi coex process,and fix bug about ble on/off process
+    - update driver ticker
+    - update wifi rom patch
+    - aic8800m40 add spi
+
+2023-07-27 - v6.5.1.0
+  * aic8800m40 update
+    - new wifi_ble_smartconfig/ble_wifi_fhostif target
+    - M40B xtal cfg
+    - vflash cfg
+    - hostif sdio
+  * aic8800mc update
+    - driver spi
+    - flash fw
+  * wifi update
+    - chan survey api
+  * wb_coex update
+    - fix running err
+
+2023-07-20 - v6.5.0.0
+  * new plf aic8800m40
+    - support test/wifi/ble target
+  * wifi update
+    - get connected ap info
+    - new module webclient
+    - tcpalive use rtos timer for non-aic8800 plf
+  * ble update
+    - scan resp api
+  * aic8800mc update
+    - support lzma bootloader
+    - rom patch
+    - msadc driver
+    - new spi driver
+  * aic8800 update
+    - gpiob2/3 irq
+
+2023-06-29 - v6.4.9.0
+  * aic8800 update
+    - add common set_edca api
+    - extend CLK_CFG, new 96/48/40/30MHz flash clk
+	- new driver msadc
+	- update wifi txpwr idx setting, support old style usage
+  * aic8800mc update
+    - extend CLK_CFG, new 48/40MHz flash clk
+	- update wifi txgain_map, add wifi_txgain_table_24g_1
+	- add vio sleep mode for deepsleep level
+	- update driver sdmmc
+  * fhostif update
+    - add vnet shared filter mode
+	- add hostif_filter_type interface
+	- add LZMA host-ota
+  * wifi update
+    - add api to disable aoto-connect for sta
+    - add common set_edca api
+    - new sysctrl_cfg.c, open source of clk cfg
+	- add WPA-PSK-SHA256 support
+  * btdm update
+    - fix bug about TX 2M and RX 1M for ble.
+	- open bt power off process
+  * others
+    - update driver wdt, bootloader do not use WDT_IRQ
+	- temp_comp added as a module
+	- add sleep api for rawdata
+
+2023-05-19 - v6.4.8.0
+  * aic8800 update
+    - wifi support tx_adapt_en cfg
+    - pmic_chip_reboot api
+    - set low power cfg by default
+    - make vcore/vrf drop user configurable
+    - set pwr idx en by default
+    - fix panic when connect to ap with less than 3 support rates
+    - fix potential cpu halt
+  * aic8800mc update
+    - new target ble_wifi, ble_wifi_fhostif_ramopt
+    - wifi/bt coex cfg
+    - redefine sleep level
+    - ble light sleep
+  * fhostif update
+    - show [Hidden ssid] in scan result handler
+    - ip pkt filter api, support set/clear
+    - host ap direct
+    - host ota process
+  * mbedtls update
+    - fix mem access bug
+  * wifi update
+    - optimize sta info table usage
+    - new edca api
+    - scan cancel process
+    - fix rate api
+  * btdm update
+    - ble deinit process
+  * others
+    - fix uart deinit api
+    - support user code to gen or use lib file
+    - fix console cmd_find api
+
+2023-04-08 - v6.4.7.0
+  * aic8800 update
+    - add target_ble_fhostif_wifi
+    - update pwm api
+    - timer
+    - patch version
+    - add lzma ota
+  * aic8800mc update
+    - sta/apsta wifi lib
+    - add 8800MC ble light sleep.
+    - add wifi wapi target
+    - patch version
+  * wifi update
+    - update ipc a2e tx free/post list empty check
+  * fhostif update
+    - fix bug: use host_if_poweroff in co_time_handler
+  * wlanif update
+    - add some function for sta
+  * test case
+    - update test case epaper
+    - update test case ticker
+
+2023-03-18 - v6.4.6.0
+  * aic8800 update
+    - sta/apsta wifi lib
+    - gpiob spi/i2cm
+    - pwm api
+    - press button test case
+    - m2d usb soft rst process, en softwdg
+  * aic8800mc update
+    - sta/apsta wifi lib
+    - fix bootloader build err
+    - extend clk cfg, support S192F96
+    - patch version
+  * wifi update
+    - new api to get ap info
+    - new api to cfg softap 40M bw
+  * fhostif update
+    - tx pkt filter process
+    - rx path optimization
+  * mqtt update
+    - fix mem leak
+
+2023-02-22 - v6.4.5.0
+  * aic8800 update
+    - spi clk mode
+    - gpio/i2cm/gpadc api
+  * aic8800mc update
+    - gpio/i2cm/wdt api
+  * fhostif update
+    - wifi scan/rssi cmd
+    - new hostif status
+    - optimize 8800mc ram usage
+  * wifi change
+    - fix mqtt bugs
+    - fix wapi bug
+    - rawdata api
+  * ble change
+    - rm rand addr write when init
+    - memory allocation
+  * rtos change
+    - bt/ble/timer/ipc_cntrl task stack size
+    - add softwdg module
+    - update rtos_al api
+
+2023-02-03 - v6.4.4.3
+  * aic8800 update
+    - psram init
+    - iomux api
+  * aic8800mc update
+    - add vcore calib
+    - wifi scan res process
+    - set PING/IPERF=on for fhostif
+  * fhostif update
+    - optimize tx path
+    - redefine cmds
+    - fix bugs
+  * ble update
+    - ble smartconfig
+  * rtos update
+    - add task info api
+    - reduce task stack cost
+  * flash update
+    - add flash wr/rd test
+
+2023-01-17 - v6.4.4.2
+  * aic8800 change
+    - psram config
+    - fix bootloader system init
+  * aic8800mc update
+    - add bss2 section to optimize ram usage
+    - add wifi_fhostif_ramopt target
+  * audio update
+    - codec_int_aic1000 mic config
+  * fhostif update
+    - fix bugs
+    - err logs
+  * lwip change
+    - fix pbuf free twice bug
+  * rtos changes
+    - reduce ram usage of timer & tcpip task
+  * wifi update
+    - add tx adaptivity config
+
+2023-01-11 - v6.4.4.1
+  * BLE
+    - fix bugs
+    - update patch
+  * fhostif
+    - fix bugs
+    - add status of ip-obtained
+  * aic8800
+    - add csi case
+    - add target of wifi wapi
+  * aic8800mc
+    - add target_ble_wifi_fhostif
+
+2023-01-03 - v6.4.4.0
+  * memory usage optimized
+    - rm redundant vars
+    - set initial value
+  * hostif
+    - select sdio or usb with macro define, reduce code & ram
+    - set host buf_base/buf_size/rxbuf_num_thres configurable
+    - enhance sdio pin driver strength, ioen loop with cb func
+    - speedup with direct tx path, optimize rx aggr process
+  * fhostif
+    - update cmds
+    - add scan result akm
+    - add custom OTA cmd
+  * aic8800
+    - update aic8800a mic diff mode
+    - update rom patch, update 5g txgain table
+  * aic8800mc
+    - add vio/vflash/vrf/lpclk cfg
+    - add gpio wakeup cfg api
+
+2022-12-15 - v6.4.3.8
+  * aic8800mc
+    - fix gpiob irq process
+    - fix rf_config arrays
+    - update libs
+
+2022-12-08 - v6.4.3.7
+  * aic8800mc add txpwr setting
+  * aic8800m
+    - support wpa3 as default
+    - fix bug
+  * wifi stack update
+    - fhostif: add start ap, stop ap, wifi scan
+    - update 8800m lowpower case
+  * M2D
+    - add Tmall Genie Wakeup Word and process
+
+2022-11-30 - v6.4.3.6
+  * aic8800mc add new target
+  * aic8800mc changes
+    - add clock change in hw_cfg.h
+  * wifi stack update
+    - add wifi cfg RF_OPTx
+    - add parser of format of scan result
+
+2022-11-25 - v6.4.3.5
+  * hostif changes
+    - fix bug related to usb flow control
+    - optimize tx/rx buf usage
+  * fhostif update for aic8800mc
+    - enter/exit sleep cmd
+  * softap update
+    - add api to set max sta num
+
+2022-11-21 - v6.4.3.4
+  * aic8800mc switch to u02
+    - set WIFI_RAM_VER=on & replace libwifi.a for u01 compatibility
+  * rawdata mode api changes
+    - host_if_data_send with return value
+    - add perfrx & perftx commands
+  * fix build err of bootloader & uartwifi
+  * netdrv changes
+    - add perf recv & send cases
+    - add macro CONFIG_SDIO_PWRCTRL
+
+2022-11-14 - v6.4.3.3
+  * test case bootloader changes
+    - add size check
+  * hostif changes
+    - user cfg hostif type & mode
+    - add rawdata recv callback func
+  * ble_smartconfig changes
+    - fix enum usage

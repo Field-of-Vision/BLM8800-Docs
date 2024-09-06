@@ -1,0 +1,60 @@
+#asio
+#if (env['ASIO'] == 'on')
+    asio/asio.c
+    asio/asio_src.c
+    asio/asio_dsd.c
+#endif #(env['ASIO'] == 'on')
+
+#app
+    app/app_media.c
+    app/app_media_mgr.c
+
+#device
+#if (env['ASIO'] == 'on')
+    device/codec_tlv320aic32.c
+#endif #(env['ASIO'] == 'on')
+#if (env['PMIC'] == 'on' and env['PMIC_VER'] == 'aud')
+    device/codec_int_aic1000.c
+#endif #(env['PMIC'] == 'on' and env['PMIC_VER'] == 'aud')
+#if (env['PMIC'] == 'on' and env['PMIC_VER'] == 'lite')
+    device/codec_ext_aic1000.c
+    device/aic1000_psi_api.c
+#endif #(env['PMIC'] == 'on' and env['PMIC_VER'] == 'lite')
+
+#common
+    common/audio_config.c
+    common/audio_utils.c
+    common/rt_mem.c
+
+#process
+    process/eq/audio_eq_cmd.c
+    process/drc/audio_drc_cmd.c
+    process/audio_proc/audio_proc_api.c
+    process/eq/audio_eq.c
+    process/drc/audio_drc.c
+
+#bt
+#if (env['USB_BT'] == 'on')
+    bt/src/usb_bt/usb_bt.c
+    bt/src/usb_bt/usb_bt_config.c
+    bt/src/usb_bt/usb_bt_dongle.c
+#endif (env['USB_BT'] == 'on')
+
+#wifi
+#if (env['WIFI_AUDIO'] == 'on')
+    wifi/src/wifi_voice_config.c
+    wifi/src/wifi_headset/wifi_wh_config.c
+    wifi/src/wifi_headset/wifi_wh_headset_common.c
+    wifi/src/wifi_headset/wifi_wh_user.c
+    wifi/src/wifi_headset/wifi_wh_dongle.c
+    wifi/src/wifi_headset/wifi_wh_headset.c
+    wifi/src/wifi_mic/wifi_mic_config.c
+    wifi/src/wifi_mic/wifi_mic_tx_common.c
+    wifi/src/wifi_mic/wifi_mic_user.c
+    wifi/src/wifi_mic/wifi_mic_rx.c
+    wifi/src/wifi_mic/wifi_mic_tx.c
+#endif #(env['WIFI_AUDIO'] == 'on')
+
+#if (env['USE_LIB_AUDIO'] == 'off')
+    include sourcelist_lib.txt
+#endif #(env['USE_LIB_AUDIO'] == 'off')

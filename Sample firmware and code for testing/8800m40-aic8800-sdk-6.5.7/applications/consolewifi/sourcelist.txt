@@ -1,0 +1,3 @@
+# console files
+    src/fhost_console.c
+    ../command_common/src/fhost_command_common.c

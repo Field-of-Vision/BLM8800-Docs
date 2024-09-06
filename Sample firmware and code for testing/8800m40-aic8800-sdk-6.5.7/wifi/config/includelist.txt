@@ -1,0 +1,13 @@
+# wifi stack includes
+  fhost
+  fhost/application
+  hostif
+  hostif/memory
+  hostif/sdio
+  hostif/sdio/$PLF
+  hostif/usb
+  macif
+  macif/$PLF
+  wlan
+  fhost/application/librtp
+  rawdata

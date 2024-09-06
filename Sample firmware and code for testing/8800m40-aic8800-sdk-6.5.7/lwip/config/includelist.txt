@@ -1,0 +1,28 @@
+# Include path
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/lwip
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/lwip/apps
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/lwip/priv
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/lwip/prot
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/netif
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/netif/ppp
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/netif/ppp/polarssl
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/posix
+   lwip-STABLE-2_0_2_RELEASE_VER/src/include/posix/sys
+   lwip-STABLE-2_0_2_RELEASE_VER/ports/rtos/include
+   net_al
+#if (env['SOFTAP'] != 'off')
+   dhcps
+#endif #(env['SOFTAP'] != 'off')
+#if (env['MQTT'] != 'off')
+   # Include path   
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqttclient
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/network/
+   #lwip-STABLE-2_0_2_RELEASE_VER/src/appsmqttclient//network/mbedtls/include/mbedtls
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/platform/FreeRTOS
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/test
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/log
+   lwip-STABLE-2_0_2_RELEASE_VER/src/apps/mqttclient/mqtt_common/PLOOC
+#endif #(env['MQTT'] != 'off')

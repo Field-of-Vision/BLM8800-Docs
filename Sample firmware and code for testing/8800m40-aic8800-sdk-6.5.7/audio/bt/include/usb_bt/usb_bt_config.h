@@ -1,0 +1,26 @@
+#ifndef _USB_BT_CONFIG_H_
+#define _USB_BT_CONFIG_H_
+
+#include <stdint.h>
+
+uint32_t usb_bt_config_usb_audio_samprate_get(void);
+uint8_t usb_bt_config_usb_audio_ch_num_get(void);
+uint16_t usb_bt_config_usb_audio_pkt_size_get(void);
+uint32_t usb_bt_config_headset_voice_samprate_get(void);
+uint8_t usb_bt_config_headset_capture_in_ch_num_get(void);
+uint8_t usb_bt_config_headset_capture_out_ch_num_get(void);
+uint8_t usb_bt_config_headset_playback_in_ch_num_get(void);
+uint8_t usb_bt_config_headset_playback_out_ch_num_get(void);
+float usb_bt_config_d2h_pkt_size_ms_get(void);
+float usb_bt_config_h2d_pkt_size_ms_get(void);
+uint16_t usb_bt_config_usb_rx_ring_buffer_size_ms_get(void);
+uint16_t usb_bt_config_usb_rx_start_level_size_ms_get(void);
+uint16_t usb_bt_config_usb_tx_ring_buffer_size_ms_get(void);
+uint16_t usb_bt_config_usb_tx_start_level_size_ms_get(void);
+uint32_t usb_bt_config_usb_rx_ring_buffer_size_get(void);
+uint32_t usb_bt_config_usb_rx_start_level_size_get(void);
+uint32_t usb_bt_config_usb_tx_ring_buffer_size_get(void);
+uint32_t usb_bt_config_usb_tx_start_level_size_get(void);
+uint8_t usb_bt_config_msg_queue_elt_nb_get(void);
+
+#endif

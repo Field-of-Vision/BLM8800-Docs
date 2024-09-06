@@ -1,0 +1,2 @@
+# Web cfg files
+    src/fhost_web_cfg.c

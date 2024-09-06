@@ -1,0 +1,65 @@
+#if (env['USE_LIB_BT'] == 'on')
+# bt
+    bt/include
+#if (env['BLE_ONLY'] == 'off')
+    bt/include/interface
+# bt_aon
+    bt/bt_aon
+#endif # (env['BLE_ONLY'] == 'off')
+#endif # (env['USE_LIB_BT'] == 'on')
+
+#if (env['BT_BLE'] == 'on')
+# bt_ble
+# ble_app
+    ble/ble_app/app_batt
+    ble/ble_app/app_dis
+    ble/ble_app/app_hid
+    ble/ble_app/app_hrps
+    ble/ble_app/app_htp
+    ble/ble_app/app_main
+    ble/ble_app/app_sec
+    ble/ble_app/app_smartconfig
+    ble/ble_app/app_audtransmits
+    ble/ble_app/app_audtransmitc
+    ble/ble_app/app_udfc
+    ble/ble_app/app_udfs
+    ble/ble_app/
+
+# ble_dbg
+    ble/ble_dbg/
+
+# ble_stack
+    ble/ble_stack/common/api
+    ble/ble_stack/hl/inc
+    ble/ble_stack/hl/api
+    ble/ble_stack/ke/src
+    ble/ble_stack/ke/api
+    ble/ble_stack/ble_ip
+# ble adp
+#if (env['BLE_ONLY'] == 'on')
+    ble/ble_adp/
+#endif #(env['BLE_ONLY'] == 'on')
+#endif # (env['BT_BLE'] == 'on')
+
+#if (env['BT_BLE'] == 'on')
+    ble/ble_profiles/smartconfig/smartconfigs/api
+    ble/ble_profiles/smartconfig/smartconfigs/src
+    ble/ble_profiles/audtransmit/audtransmits/api
+    ble/ble_profiles/audtransmit/audtransmits/src
+    ble/ble_profiles/audtransmit/audtransmitc/api
+    ble/ble_profiles/audtransmit/audtransmitc/src
+    ble/ble_profiles/udf/udfc/api
+    ble/ble_profiles/udf/udfc/src
+    ble/ble_profiles/udf/udfs/api
+    ble/ble_profiles/udf/udfs/src
+    ble/ble_profiles/hogp/hogpd/api
+    ble/ble_profiles/hogp/hogpd/src
+    ble/ble_profiles/bas/bass/api
+    ble/ble_profiles/bas/bass/src
+    ble/ble_profiles/dis/diss/api
+    ble/ble_profiles/dis/diss/src
+#endif #(env['BT_BLE'] == 'on')
+
+#if (env['USE_LIB_BT'] == 'off')
+    include ./config/includelist_lib.txt
+#endif # (env['USE_LIB_BT'] == 'off')

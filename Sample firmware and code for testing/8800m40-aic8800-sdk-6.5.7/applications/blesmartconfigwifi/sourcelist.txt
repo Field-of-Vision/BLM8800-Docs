@@ -1,0 +1,2 @@
+# example files
+    src/ble_smartconfig_wifi_example.c

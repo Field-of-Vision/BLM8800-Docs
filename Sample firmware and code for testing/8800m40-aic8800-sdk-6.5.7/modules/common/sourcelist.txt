@@ -1,0 +1,10 @@
+# DBG files
+    co_dlist.c
+    co_list.c
+    co_math.c
+    co_pool.c
+    co_ring.c
+    co_version.c
+#if (env['RTOS'] != 'none')
+    co_main.c
+#endif #(env['RTOS'] != 'none')

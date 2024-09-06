@@ -1,0 +1,246 @@
+/* Linker script for aic8800 */
+
+/* Linker script to configure memory regions. */
+MEMORY
+{
+    IROM (rwx)      : ORIGIN = CODE_START_ADDR, LENGTH = 512K
+    DRAM (rwx)      : ORIGIN = 0x001A0000, LENGTH = (160K - 0x800)
+    HEAP_RAM (rwx)      : ORIGIN = 0x00140000, LENGTH = 128K
+    IRAM (rwx)      : ORIGIN = 0x001C7800, LENGTH = 0x800
+    ipc_shared_memory (!rx) : ORIGIN = 0x00190000, LENGTH = 2K
+    ipc_pkt_memory    (!rx) : ORIGIN = 0x00190800, LENGTH = 30K
+    host_rxbuf_memory (!rx) : ORIGIN = 0x00100000, LENGTH = 96K
+    #if defined(CFG_WIFI_RAM_VER)
+    fmacfw_rom        (!rx) : ORIGIN = 0x081BC000, LENGTH = 256K
+    #else
+    rom_patch_memory  (!rx) : ORIGIN = 0x001CC000, LENGTH = 16K
+    #endif
+    SHARED_HOST (w)   : ORIGIN = 0x001E5000, LENGTH = 2K
+    PRIVATE_HOST (w)  : ORIGIN = 0x001E5800, LENGTH = 10K
+    PRIVATE_PATCH (w) : ORIGIN = 0x001E8000, LENGTH = 32K
+}
+
+/* Linker script to place sections and symbol values. Should be used together
+ * with other linker script that defines memory regions FLASH and RAM.
+ * It references following symbols, which must be defined in code:
+ *   Reset_Handler : Entry of reset handler
+ *
+ * It defines following symbols, which code can use without definition:
+ *   __exidx_start
+ *   __exidx_end
+ *   __etext
+ *   __data_start__
+ *   __preinit_array_start
+ *   __preinit_array_end
+ *   __init_array_start
+ *   __init_array_end
+ *   __fini_array_start
+ *   __fini_array_end
+ *   __data_end__
+ *   __bss_start__
+ *   __bss_end__
+ *   __end__
+ *   end
+ *   __HeapLimit
+ *   __StackLimit
+ *   __StackTop
+ *   __stack
+ */
+ENTRY(Reset_Handler)
+
+SECTIONS
+{
+    .text :
+    {
+        __code_start__ = .;
+        /* the address 0 must contain the boot vectors */
+        KEEP(*(.isr_vector))
+        __isr_vector_end__ = .;
+        *boot_startup.o(.text)
+        *(.text*)
+
+        #if defined(CFG_STDLIB)
+        KEEP(*(.init))
+        KEEP(*(.fini))
+        /* .ctors */
+        *crtbegin.o(.ctors)
+        *crtbegin?.o(.ctors)
+        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+        *(SORT(.ctors.*))
+        *(.ctors)
+        /* .dtors */
+        *crtbegin.o(.dtors)
+        *crtbegin?.o(.dtors)
+        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+        *(SORT(.dtors.*))
+        *(.dtors)
+        #endif
+
+        *(.rodata*)
+        . = ALIGN(4);
+        __code_end__ = .;
+    } > IROM
+
+    .ARM.exidx :
+    {
+       __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+       __exidx_end = .;
+    } > IROM
+
+    __etext_irom = .;
+
+    .ramtext : AT (__etext_irom)
+    {
+        __ramtext_start__ = .;
+        *(RAMTEXT)
+        . = ALIGN(4);
+        __ramtext_end__ = .;
+    } > IRAM
+
+    __etext_iram = __etext_irom + (__ramtext_end__ - __ramtext_start__);
+
+    .vectors (ORIGIN(DRAM)) (NOLOAD):
+    {
+        __vectors_start__ = .;
+        . = (__isr_vector_end__ - __code_start__);
+        __vectors_end__ = .;
+    } > DRAM
+
+    __fast_etext = __etext_iram;
+
+    .fast_func : AT (__fast_etext)
+    {
+        __fast_func_start__ = .;
+        Image$$RW_IRAM1$$Base = .;
+         KEEP(*(.fast_code))
+
+        . = ALIGN(4);
+        /* All fast_func end */
+        __fast_func_end__ = .;
+    } > DRAM
+
+    __etext = __fast_etext + SIZEOF(.fast_func);
+
+    __pavol_etext = __etext;
+
+    .pavol_text : AT (__pavol_etext)
+    {
+        __pavol_text_start__ = .;
+         KEEP(*(PAVOL_RAM))
+        . = ALIGN(4);
+        __pavol_text_end__ = .;
+    } > DRAM
+
+    __etext = __pavol_etext + SIZEOF(.pavol_text);
+
+    .data : AT (__etext)
+    {
+        __data_start__ = .;
+        Image$$RW_IRAM1$$Base = .;
+        *(vtable)
+        *(.data*)
+
+        #if defined(CFG_STDLIB)
+        . = ALIGN(4);
+        /* preinit data */
+        PROVIDE (__preinit_array_start = .);
+        KEEP(*(.preinit_array))
+        PROVIDE (__preinit_array_end = .);
+        . = ALIGN(4);
+        /* init data */
+        PROVIDE (__init_array_start = .);
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        PROVIDE (__init_array_end = .);
+        . = ALIGN(4);
+        /* finit data */
+        PROVIDE (__fini_array_start = .);
+        KEEP(*(SORT(.fini_array.*)))
+        KEEP(*(.fini_array))
+        PROVIDE (__fini_array_end = .);
+        #endif
+
+        . = ALIGN(4);
+        /* All data end */
+        __data_end__ = .;
+
+    } > DRAM
+
+    __image_end__ = __etext + SIZEOF(.data);
+
+    .bss (NOLOAD):
+    {
+        __bss_start__ = .;
+        *(.bss*)
+        *(COMMON)
+        __bss_end__ = .;
+        *(SHAREDRAM)
+        Image$$RW_IRAM1$$ZI$$Limit = . ;
+    } > DRAM
+
+    .heap :
+    {
+        __end__ = .;
+        *(.heap*)
+        __HeapLimit = .;
+    } > HEAP_RAM
+    PROVIDE(__sbrk_start = ADDR(.heap));
+    PROVIDE(__krbs_start = ADDR(.heap) + SIZEOF(.heap));
+
+    /* .stack_dummy section doesn't contains any symbols. It is only
+     * used for linker to calculate size of stack sections, and assign
+     * values to stack symbols later */
+    .stack_dummy :
+    {
+        *(.stack)
+    } > DRAM
+
+    /* Set stack top to end of DRAM, and stack limit move down by
+     * size of stack_dummy section */
+    __StackTop = ORIGIN(DRAM) + LENGTH(DRAM);
+    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
+    PROVIDE(__stack = __StackTop);
+
+    /* Check if data + stack exceeds RAM limit */
+    ASSERT(__StackLimit >= __HeapLimit, "region DRAM overflowed with stack")
+
+    /* IPC shared RAM */
+    IPC_SHARED (NOLOAD):
+    {
+        *(SHAREDRAMIPC)
+    } > ipc_shared_memory
+
+    PROVIDE(__ipc_shd_mem_start__ = ORIGIN(ipc_shared_memory));
+    PROVIDE(__ipc_pkt_mem_start__ = ORIGIN(ipc_pkt_memory));
+    PROVIDE(__ipc_pkt_mem_size__ = LENGTH(ipc_pkt_memory));
+    #if defined(CFG_WIFI_RAM_VER)
+    PROVIDE(__fmacfw_rom_start__ = ORIGIN(fmacfw_rom));
+    #else
+    PROVIDE(__rom_patch_mem_start__ = ORIGIN(rom_patch_memory));
+
+    /* Check if DRAM overlapped with patch  */
+    ASSERT(__rom_patch_mem_start__ >= __StackTop, "region DRAM overlapped with patch")
+    #endif
+
+    HOST_RXBUF (NOLOAD):
+    {
+        _shrbram = . ;
+        *(HOST_RXBUF)
+        _ehrbram = . ;
+    } > host_rxbuf_memory
+
+    .shared_host (NOLOAD):
+    {
+        _start_shared_host = .;
+        KEEP(*(SORT_BY_NAME(SHAREDMEM_HOST_*)))
+        _end_shared_host = .;
+    } > SHARED_HOST
+
+    .private_host (NOLOAD):
+    {
+        _start_private_host = .;
+        KEEP(*(SORT_BY_NAME(PRIVATEMEM_HOST_*)))
+        _end_private_host = .;
+    } > PRIVATE_HOST
+}

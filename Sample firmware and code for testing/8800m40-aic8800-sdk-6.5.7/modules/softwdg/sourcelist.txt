@@ -1,0 +1,2 @@
+# softwdg files
+    softwdg.c

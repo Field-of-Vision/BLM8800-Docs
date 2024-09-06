@@ -1,0 +1,319 @@
+########################################################################################
+#
+# @file SConstruct
+#
+# @brief Scons base script
+#
+# Copyright (C) RivieraWaves 2009-2015
+#
+#########################################################################################
+
+import sys
+import os.path
+import subprocess
+import scutils
+import re
+
+
+#-----------------------------------------------------------
+# Help
+#-----------------------------------------------------------
+def outstr_none(s, target, source, env):
+    pass
+
+def builder_help(target, source, env):
+    print("Synopsis:")
+#    print("  scons.py -Q [options=value] ([target]/[buildtool] | [alias])\n")
+#    print("where:")
+#    print("  - target/buildtool must correspond to an existing directory")
+#    print("  - target : compilation target (embedfullmac, appsplitmac ...)")
+#    print("  - buildtool : rvds31, gnuarm (or other defined build tools)")
+#    print("  - alias: predefined aliases to target/buildtool for faster access:")
+#    for alias, unalias in aliases.iteritems():
+#        print("    + "+alias+" = "+unalias)
+#    print("  - options:")
+#    print("    + cpu : define the CPU to compile for (default is arm926ej-s)")
+#    print("    + optim : define the optimization level of the compilation (default 0)")
+#    print("\nExamples:")
+#    print("  - compile fullmac target with RVDS31 tool:")
+#    print("      scons.py -Q fullmac/rvds31")
+#    print("  - compile splitmac target with RVDS31 tool with optimization max:")
+#    print("      scons.py -Q optim=3 splitmac/rvds31")
+#    print("  - compile splitmac target with GNUARM tool for arm7tdmi cpu:")
+#    print("      scons.py -Q cpu=arm7tdmi splitmac/gnuarm")
+
+Command('help', None, builder_help, PRINT_CMD_LINE_FUNC=outstr_none)
+#Default('help')
+
+
+
+#-----------------------------------------------------------
+# Global stuff
+#-----------------------------------------------------------
+
+# To speed up?
+#DefaultEnvironment(tools = [])
+#SourceCode('.', None)
+
+version_path = '../src/config/version.h'
+
+
+
+#-----------------------------------------------------------
+# Version include file handling
+#-----------------------------------------------------------
+
+def version_read():
+    """ Read version.h and return tuple with current sw version
+    """
+    f = open(version_path, 'rb')
+
+    # search the version string "vM.m.r.p
+    m = re.search('VERSION_STR.*"v([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)', f.read())
+    if not m: raise Exception('Bad version.h format (D)')
+    ver = ( int(m.group(1)), int(m.group(2)), \
+            int(m.group(3)), int(m.group(4)) )
+    f.close()
+    return ver
+
+
+def version_write(maj, min, rel, pat):
+    """ Open version.h and write new sw version
+    """
+    # open for read + update in binary (EOL convertion would modify offsets!)
+    f = open(version_path, 'r+b')
+    buf = f.read()
+    # come back to the beginning
+    f.seek(0)
+    new_pos = 0
+
+    # search a field, write the file up to it and modify it
+    def search_and_replace(buf, search_str, replace_str):
+        m = re.search(search_str, buf)
+        if not m: raise Exception('regexp not found: ' + search_str)
+        f.write(buf[:m.start(1)] + replace_str)
+        return m.end(1)
+
+    # list of regexp with target field in () and new field to update
+    list = [('_MAJ[ \t]*([0-9]*)', str(maj)),
+            ('_MIN[ \t]*([0-9]*)', str(min)),
+            ('_REL[ \t]*([0-9]*)', str(rel)),
+            ('_PAT[ \t]*([0-9]*)', str(pat)),
+            ('VERSION_STR[ \t]*"(.*)"', 'v%d.%d.%d.%d' % (maj, min, rel, pat)),
+            ('VERSION_DATE[ \t]*"(.*)"', scutils.get_id_string()) ]
+
+    # process each field
+    for search, replace in list:
+        new_pos = search_and_replace(buf, search, replace)
+        buf = buf[new_pos:]
+
+    # write the end of the file
+    f.write(buf)
+    f.truncate()
+    f.close()
+
+
+
+def listver(target, source, env):
+    """ Read version.h and return tuple with current sw version
+    """
+
+    if target[0].name == 'listver':
+        path = version_path
+    elif target[0].name == 'log':
+        path = '..'
+    else:
+        raise "internal"
+
+    svnlog = subprocess.Popen(['svn', 'log', '-l', '500', path],
+        stdout = subprocess.PIPE)
+
+    buf = ''
+    while True:
+        m = re.search('^---+..$', buf, re.M)
+        if m:
+            entry_start = m.end(0)
+            m = re.search('^---+..$', buf[entry_start:], re.M)
+        if not m:
+            #tmp = svnlog.communicate()[0]
+            tmp = svnlog.stdout.read()
+
+            buf += tmp
+            # loop while child has not terminated or there is stuff to read
+            if tmp or svnlog.poll() is None: continue
+            # else check error and return
+            if svnlog.returncode: raise Exception('svn log: ' + str(svnlog.returncode))
+            return
+
+        entry_end = entry_start + m.start(0)
+
+        field = buf[entry_start:entry_end].split('|')
+        last = field[3].split('\n', 2)
+
+        rev = field[0].strip()
+        login = field[1].strip()
+        date = field[2].split()[0]
+        comment = ' + '.join(last[2].strip().splitlines())
+        if 90 < len(comment): comment = comment[:87]+ '...'
+        print "%s  %-8s  %6s  %s" % (date, login, rev, comment)
+
+        buf = buf[entry_end + 1:]
+
+
+
+
+def svn_info(target, source, env):
+    """ Get info from SVN and return tuple with:
+          full url, url, 'trunk' | 'branch' | 'tag' [, branch name |, tag name]
+        Must be called from 'config' subdirectory
+    """
+    pout, pin = os.pipe()
+    retcode = subprocess.call(['svn', 'info'], stdout = pin)
+    if retcode: raise Exception('svn info returned: ' + str(retcode))
+
+    buf = os.read(pout, 1000)
+    url = re.search('^URL: (.*)/config', buf, re.M)
+    if not url: raise Exception('SVN URL not found in: ' + buf)
+
+    trunk = re.match('(.*)/trunk', url.group(1))
+    if trunk:
+        return url.group(1), trunk.group(1), 'trunk'
+
+    tag = re.match('(.*)/tags/(.*)', url.group(1))
+    if tag:
+        return url.group(1), tag.group(1), 'tag', tag.group(2)
+
+    branch = re.match('(.*)/branches/(.*)', url.group(1))
+    if branch:
+        return url.group(1), branch.group(1), 'branch', branch.group(2)
+
+    raise Exception('No trunk/tags/branches in: ' + url.group(1))
+
+
+def incver(target, source, env):
+    """ Update version.h, increment release or patch number,
+        commit the new version.h and tag the current branch.
+        'target' is used to select between release and patch.
+        Works currently only with trunk
+    """
+
+    print 'Retrieving SVN info'
+    svninfo = svn_info(None, None, env)
+
+    print 'Updating last \'version.h\' from current branch'
+    retcode = subprocess.call(['svn', 'update', '-q', version_path])
+    if retcode: raise Exception('svn update returned: ' + str(retcode))
+
+    maj, min, rel, pat = version_read()
+    print '\nCurrent version is: v%d.%d.%d.%d' % (maj, min, rel, pat)
+
+    # todo: add a svn lock on version.h
+
+    if target[0].name == 'increl':
+        if svninfo[2] != 'trunk': raise Exception('Cannot be done on tag/branch')
+        rel += 1
+        pat = 0
+        if 255 < rel: raise Exception('Release version number overflow!')
+
+    elif target[0].name == 'incpat':
+        if svninfo[2] == 'trunk':
+            # todo: check that no branch vM.m.r exists
+            pass
+
+        elif svninfo[2] == 'branch':
+            print 'Current branch: ' + svninfo[3]
+        elif svninfo[2] == 'tag':
+            raise Exception('Cannot be done on tag')
+        else:
+            raise Exception()
+        pat += 1
+        if 255 < pat: raise Exception('Patch version number overflow!')
+
+    else:
+        raise Exception()
+
+    version_str_new = 'v%d.%d.%d.%d' % (maj, min, rel, pat)
+    print 'Next one will be:   ' + version_str_new
+
+    print '\nComment (empty to cancel): '
+    comment = sys.stdin.readline()[:-1]
+    if not comment:
+        print 'Empty comment, operation aborted'
+        return
+
+    comment = version_str_new + '  ' + comment
+
+    print '\nUpdating local \'version.h\' with new version.'
+    version_write(maj, min, rel, pat)
+
+    print 'Committing new \'version.h\' in current branch:'
+    print '\tsvn', 'commit', version_path, '-m', comment
+    retcode = subprocess.call(['svn', 'commit', '-q', version_path, '-m', comment])
+    if retcode: raise Exception('svn commit returned: ' + str(retcode))
+
+    tag_url_new = svninfo[1] + '/tags/' + version_str_new
+    print 'Tagging current branch:'
+    print '\tsvn', 'copy', svninfo[0], tag_url_new
+    retcode = subprocess.call(['svn', 'copy', '-q', svninfo[0], tag_url_new, '-m', comment])
+    if retcode: raise Exception('svn commit returned: ' + str(retcode))
+
+
+def getver(target, source, env):
+    """ Update version.h, increment release or patch number,
+        commit the new version.h and tag the current branch.
+        'target' is used to select between release and patch.
+        Works currently only with trunk
+    """
+    maj, min, rel, pat = version_read()
+    print '\nCurrent version is: v%d.%d.%d.%d\n' % (maj, min, rel, pat)
+
+
+commands = {'increl':incver,
+            'incpat':incver,
+            'listver':listver,
+            'log':listver,
+            'getver':getver }
+
+
+
+#-----------------------------------------------------------
+# Parsing command line
+#-----------------------------------------------------------
+
+for target in BUILD_TARGETS:
+
+    idx = BUILD_TARGETS.index(target)
+
+    if target in commands:
+        Command(target, None, commands[target], PRINT_CMD_LINE_FUNC=outstr_none)
+
+    elif os.path.exists(target):
+        if not os.path.exists(os.path.join(target, 'SConscript')):
+            target, buildtool = os.path.split(os.path.normpath(target))
+            if buildtool  in ['aps-gcc']:
+                ARGUMENTS['BT_ARM'] = buildtool
+                
+            elif buildtool in ['rvds', 'gnuarm','armgcc_4_8','armgcc','armcc_5']:
+                ARGUMENTS['BT_ARM'] = buildtool
+
+            elif buildtool in ['peta', 'mb', 'gcc']:
+                ARGUMENTS['BT_MB'] = buildtool
+
+            elif buildtool in ['gcc', 'gcc-4', 'msvc', 'mingw-gcc']:
+                ARGUMENTS['BT_SIM'] = buildtool
+                ARGUMENTS['BT_GCC'] = buildtool
+            elif buildtool in ['g++', 'mingw-g++']:
+                ARGUMENTS['BT_GPP'] = buildtool
+            elif buildtool in ['riscv32-gcc']:
+                ARGUMENTS['BT_RISC'] = buildtool
+            else:
+                print 'Error: buildtool unknown:', buildtool
+                raise
+
+
+        BUILD_TARGETS[idx] = os.path.normpath(target)
+        
+        SConscript(os.path.join(target, 'SConscript'))
+    else:
+        print 'Directory with a SConsript file must be entered'
+

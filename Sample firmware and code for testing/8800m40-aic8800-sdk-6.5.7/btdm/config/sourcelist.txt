@@ -1,0 +1,85 @@
+#if (env['USE_LIB_BT'] == 'off')
+    include sourcelist_lib.txt
+#endif #(env['USE_LIB_BT'] == 'off')
+
+# bt_ble
+#if (env['BT_BLE'] == 'on')
+# ble_app
+    ble/ble_app/app_main/app.c
+    ble/ble_app/app_main/app_task.c
+    ble/ble_app/app_sec/app_sec.c
+
+# ble_profiles
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_SMARTCONFIG'] == 'on')
+    ble/ble_profiles/smartconfig/smartconfigs/src/smartconfig.c
+    ble/ble_profiles/smartconfig/smartconfigs/src/smartconfig_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_SMARTCONFIG'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'server')
+    ble/ble_profiles/audtransmit/audtransmits/src/audtransmits.c
+    ble/ble_profiles/audtransmit/audtransmits/src/audtransmits_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'server')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'client')
+    ble/ble_profiles/audtransmit/audtransmitc/src/audtransmitc.c
+    ble/ble_profiles/audtransmit/audtransmitc/src/audtransmitc_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'client')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'client')
+    ble/ble_profiles/udf/udfc/src/udfc.c
+    ble/ble_profiles/udf/udfc/src/udfc_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'client')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'server')
+    ble/ble_profiles/udf/udfs/src/udfs.c
+    ble/ble_profiles/udf/udfs/src/udfs_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'server')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'all_role')
+    ble/ble_profiles/udf/udfc/src/udfc.c
+    ble/ble_profiles/udf/udfc/src/udfc_task.c
+    ble/ble_profiles/udf/udfs/src/udfs.c
+    ble/ble_profiles/udf/udfs/src/udfs_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'all_role')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_HID'] == 'on')
+    ble/ble_profiles/hogp/hogpd/src/hogpd.c
+    ble/ble_profiles/hogp/hogpd/src/hogpd_task.c
+    ble/ble_profiles/bas/bass/src/bass.c
+    ble/ble_profiles/bas/bass/src/bass_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_HID'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_DIS'] == 'on')
+    ble/ble_profiles/dis/diss/src/diss.c
+    ble/ble_profiles/dis/diss/src/diss_task.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_DIS'] == 'on')
+    ble/ble_profiles/prf/prf_user.c
+
+#ble dbg
+    ble/ble_dbg/aicble_dbg.c
+#endif #(env['BT_BLE'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_HID'] == 'on')
+    ble/ble_app/app_batt/app_batt.c
+    ble/ble_app/app_hid/app_hid.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_HID'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_DIS'] == 'on')
+    ble/ble_app/app_dis/app_dis.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_DIS'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_HR'] == 'on')
+    ble/ble_app/app_hrps/app_hrps.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_HR'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_HT'] == 'on')
+    ble/ble_app/app_htp/app_ht.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_HT'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_SMARTCONFIG'] == 'on')
+    ble/ble_app/app_smartconfig/app_smartconfig.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_SMARTCONFIG'] == 'on')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'server')
+    ble/ble_app/app_audtransmits/app_audtransmits.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'server')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'client')
+    ble/ble_app/app_audtransmitc/app_audtransmitc.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_AUDTRANSMIT'] == 'client')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'server')
+    ble/ble_app/app_udfs/app_udfs.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'server')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'client')
+    ble/ble_app/app_udfc/app_udfc.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'client')
+#if (env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'all_role')
+    ble/ble_app/app_udfc/app_udfc.c
+    ble/ble_app/app_udfs/app_udfs.c
+#endif #(env['BT_BLE'] == 'on' and env['BLE_APP_UDF'] == 'all_role')

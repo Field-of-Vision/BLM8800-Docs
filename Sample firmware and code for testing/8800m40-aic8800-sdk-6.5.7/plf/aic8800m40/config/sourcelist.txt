@@ -1,0 +1,106 @@
+#***************************************************************************************
+# @file sourcelist.txt
+#***************************************************************************************
+
+# boot vectors
+#if (env['TEST'] == 'bootloader')
+    arch/boot/$BUILDTOOL/bootloader_startup.S
+#else  # (env['TEST'] == 'bootloader')
+    #if (env['TEST'] == 'microhost')
+        arch/boot/$BUILDTOOL/microhost_startup.S
+    #else # (env['TEST'] == 'microhost')
+        arch/boot/$BUILDTOOL/boot_startup.S
+    #endif # (env['TEST'] == 'microhost')
+#endif # (env['TEST'] == 'bootloader')
+
+# architecture specific std function
+#if (env['STDLIB'] == 'on')
+    arch/std/retarget.c
+    arch/std/sdk_boot.c
+#endif #(env['STDLIB'] == 'on')
+
+# fault handlers
+    arch/boot/fault_handler.c
+    arch/boot/$BUILDTOOL/exception.S
+
+# architecture specific low level functions
+    arch/ll/ll.c
+
+# architecture specific main function
+    arch/main/arch_main.c
+
+# architecture specific function
+    arch/cmsis/cmsis_nvic.c
+
+# drivers
+    driver/dma/dma_api_aud.c
+    #driver/trans/arm_bitreversal2.S
+    #driver/trans/arm_cfft_radix4_q15.c
+    #driver/trans/arm_cfft_q15.c
+    driver/flash/flash_api.c
+    driver/sdmmc/sdmmc_api.c
+    driver/spi/spi_api.c
+    driver/stdio_uart/stdio_uart.c
+    driver/sysctrl/sysctrl_cfg.c
+    driver/uart/uart1_api.c
+    driver/uart/uart2_api.c
+    driver/ticker/ticker_api.c
+    driver/ticker/us_ticker.c
+    driver/ticker/us_ticker_api.c
+    driver/ticker/lp_ticker.c
+    driver/ticker/lp_ticker_api.c
+    driver/time/time_api.c
+    driver/trng/trng_api.c
+    driver/pwm/pwm_api.c
+    driver/i2cm/i2cm_api.c
+#if (env['HOSTIF'] == 'none')
+    #driver/usbd/hal_usbd.c
+    #driver/usbd/usbd_cdc.c
+    #driver/usbd/usbd_audio.c
+    #driver/usbd/usbd_desc.c
+#endif #(env['HOSTIF'] == 'none')
+    driver/usb_host/usbh_conf.c
+    driver/usb_host/usbh_core.c
+    driver/usb_host/usbh_ctlreq.c
+    driver/usb_host/usbh_ioreq.c
+    driver/usb_host/usbh_msc.c
+    driver/usb_host/usbh_msc_bot.c
+    driver/usb_host/usbh_msc_scsi.c
+    driver/usb_host/usbh_pipes.c
+    driver/usb_host/usbh_video.c
+    driver/usb_host/usbh_video_desc_parsing.c
+    driver/usb_host/usbh_video_stream_parsing.c
+    driver/usb_host/hal_hcd.c
+    driver/usb_host/hal_usbh.c
+    driver/wdt/wdt_api.c
+    driver/gpio/gpio_api.c
+    driver/gpadc/gpadc_api.c
+    driver/msadc/msadc_api.c
+#if (env['PMIC'] == 'on')
+    driver/pmic/pwrkey_api.c
+#endif #(env['PMIC'] == 'on')
+#if (env['BT_STACK'] != 'none')
+    driver/bt/bt_aic8800m40_driver.c
+    driver/bt/bt_patch_table.c
+#if (env['BT_PATCH_MODE'] == 'mcu')
+    driver/bt/patch/mcu/fw_patch_u02.c
+    driver/bt/patch/mcu/fw_patch_table_u02.c
+    #driver/bt/patch/mcu/fw_patch_u03.c
+    #driver/bt/patch/mcu/fw_patch_table_u03.c
+#endif #(env['BT_PATCH_MODE'] == 'mcu')
+#if (env['BT_TESTMODE'] == 'on')
+    driver/bt/patch/testmode/fw_8820_btonly_u03.c
+    driver/bt/patch/testmode/fw_8820_coant_u03.c
+#endif #(env['BT_TESTMODE'] == 'on')
+#endif #(env['BT_STACK'] != 'none')
+#if (env['BT_STACK'] != 'none' or env['BT_USER'] != 'off')
+    driver/bt/bt_common_config.c
+#endif #(env['BT_STACK'] != 'none' or env['BT_USER'] != 'off')
+
+#if (env['USE_LIB_DRV'] == 'off')
+   include sourcelist_lib.txt
+#endif #(env['USE_LIB_DRV'] == 'off')
+
+#***************************************************************************************
+# End of source list
+#***************************************************************************************

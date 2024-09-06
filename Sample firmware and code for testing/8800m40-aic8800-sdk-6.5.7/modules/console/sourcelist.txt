@@ -1,0 +1,6 @@
+# console files
+    command.c
+    console.c
+#if (env['RTOS'] != 'none' and not (env['WIFI_STACK'] != 'none' and env['FHOST_APP'] in ['console', 'uartwifi']))
+    console_task.c
+#endif #(env['RTOS'] != 'none' and not (env['WIFI_STACK'] != 'none' and env['FHOST_APP'] in ['console', 'uartwifi']))

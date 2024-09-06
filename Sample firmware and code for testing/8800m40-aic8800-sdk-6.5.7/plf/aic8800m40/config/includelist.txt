@@ -1,0 +1,65 @@
+#***************************************************************************************
+# @file includelist.txt
+#
+# @brief This file lists up all the include header files of the platform.
+#
+#***************************************************************************************
+
+# architecture specific includes
+    arch
+    arch/boot
+    arch/boot/$BUILDTOOL
+    arch/cmsis
+    arch/ll
+    arch/compiler
+
+# driver
+    driver
+    driver/anareg
+    driver/dma
+    driver/ce
+    driver/trans
+    driver/flash
+    driver/iomux
+    driver/ipc
+#if (env['PMIC'] == 'on')
+    driver/pmic
+#endif (env['PMIC'] == 'on')
+    driver/psim
+    driver/rf
+    driver/reg
+    driver/rom
+    driver/sdmmc
+    driver/spi
+    driver/stdio_uart
+    driver/uart
+    driver/sysctrl
+    driver/sleep
+    driver/ticker
+    driver/time
+    driver/trng
+#if (env['HOSTIF'] == 'none')
+    driver/usbd
+#endif #(env['HOSTIF'] == 'none')
+    driver/usb_host
+    driver/wdt
+#if (env['BT_STACK'] != 'none' or env['BT_USER'] != 'off')
+    driver/bt
+#if (env['BT_PATCH_MODE'] == 'mcu')
+    driver/bt/patch/mcu
+#endif #(env['BT_PATCH_MODE'] == 'mcu')
+#if (env['BT_TESTMODE'] == 'on')
+    driver/bt/patch/testmode
+#endif #(env['BT_TESTMODE'] == 'on')
+#endif #(env['BT_STACK'] != 'none' or env['BT_USER'] != 'off')
+    driver/common
+    driver/aud_proc
+    driver/gpio
+    driver/gpadc
+    driver/msadc
+    driver/i2cm
+    driver/pwm
+
+#***************************************************************************************
+# End of include list
+#***************************************************************************************

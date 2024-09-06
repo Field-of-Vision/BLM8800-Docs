@@ -1,0 +1,6 @@
+# fatfs files
+    diskio.c
+    ff.c
+    ffsystem.c
+    ffunicode.c
+    driver/usbh_diskio.c
